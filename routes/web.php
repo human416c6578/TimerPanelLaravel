@@ -8,6 +8,9 @@ use App\Http\Controllers\LeaderboardController;
 
 Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
 Route::get('/players/{uuid}', [PlayerController::class, 'profile'])->name('players.show');
+Route::delete('/players/{uuid}/times', [PlayerController::class, 'deleteUserRankedTimes'])
+    ->name('players.delete.times');
+
 
 Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
 Route::get('/maps/{uuid}', [MapController::class, 'show'])->name('maps.show');

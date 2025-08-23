@@ -50,6 +50,21 @@
                 <p class="text-indigo-100 font-bold">{{ $totalTimes }}</p>
             </div>
 
+            <div>
+        @auth
+        <form method="POST" action="{{ route('players.delete.times', $user->uuid) }}">
+            @csrf
+            @method('DELETE')
+            <button 
+                type="submit" 
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Delete Player Times
+            </button>
+        </form>
+        @endauth
+</div>
+
+
             {{-- Add more stats if available --}}
             {{-- 
             <div>
@@ -102,6 +117,21 @@
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js" integrity="sha512-79j1YQOJuI8mLseq9icSQKT6bLlLtWknKwj1OpJZMdPt2pFBry3vQTt+NZuJw7NSd1pHhZlu0s12Ngqfa371EA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+@if (session('status'))
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Toastify({
+                text: "{{ session('status') }}",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#4ade80", // green
+            }).showToast();
+        });
+    </script>
+@endif
 <script>
     // Tabs toggle
     document.querySelectorAll('.tab-button').forEach(btn => {

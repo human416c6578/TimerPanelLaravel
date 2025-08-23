@@ -81,8 +81,6 @@ class PlayerController extends Controller
 
         $totalTimes = Time::where("user_uuid", $uuid)->count();
 
-        
-
         $chartData = $this->generatePlayedTimeChartData($user->auth_id);
 
         return view(
@@ -167,6 +165,52 @@ class PlayerController extends Controller
 
         return collect(DB::connection('game_mysql')->select($query, [$userUuid]));
     }
+
+    public function deleteUserRankedTimes(string $userUuid)
+{
+    $userTimes = Cache::remember("ranked_times_{$userUuid}", 600, function () use ($userUuid) {
+        return $this->getUserRankedTimes($userUuid);
+    });
+
+    $userTimes = collect($userTimes);
+
+    // Only rank 1 times
+    $rank1Times = $userTimes->where("Rank", 1);
+    $filePaths = [];
+    // Example: unlink files related to these records
+    foreach ($rank1Times as $time) {
+        // Adjust path depending on how files are stored
+        $filePath = "/home/csgfxeu/public_html/uploads/recording/{$time->MapName}/[{$time->CategoryName}].rec";
+        
+        if (file_exists($filePath)) {
+            $filePaths[] = $filePath;
+            unlink($filePath);
+        }
+    }
+
+    // Delete from DB
+    
+    DB::connection('game_mysql')
+        ->table('times')
+        ->where('user_uuid', $userUuid)
+        ->delete();
+    
+    // Clear cache so it doesn't serve stale data
+    Cache::forget("ranked_times_{$userUuid}");
+
+    /*
+    return response()->json([
+        "status" => "success",
+        "message" => "User times deleted and rank1 files unlinked",
+        "deleted_files" => $rank1Times->count(),
+        "deleted_paths" => $filePaths
+    ]);
+    */
+
+    return redirect()
+    ->back()
+    ->with('status', 'User times deleted and replay files unlinked.');
+}
 
     function convertToSteamID64($authId)
     {
