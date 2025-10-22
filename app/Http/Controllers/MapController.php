@@ -84,17 +84,31 @@ class MapController extends Controller
         DB::connection('game_mysql')
         ->table('times')
         ->where('map_uuid', $uuid)
-        ->where('category_id', $request->input('record_category'))
-        ->where('user_uuid', $request->input('record_user'))
+        ->where('category_id', $request->input('category_id'))
+        ->where('user_uuid', $request->input('user_uuid'))
         ->delete();
+
+        // Deleting replay if any
+        if($request->input('rank') == 1)
+        {
+            $map = Map::findOrFail($uuid);
+            $categoryName = $request->input('category_name');
+            $filePath = "/home/csgfxeu/public_html/uploads/recording/{$map->name}/[{$categoryName}].rec";
+
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
 
         $cacheKey = "map_leaderboards_{$uuid}";
         Cache::forget($cacheKey);
 
         Log::info('Deleting record', [
             'map_uuid'       => $uuid,
-            'category_id'    => $request->input('record_category'),
-            'user_uuid'      => $request->input('record_user'),
+            'category_id'    => $request->input('category_id'),
+            'user_uuid'      => $request->input('user_uuid'),
+            'category_name'    => $request->input('category_name'),
+            'rank'    => $request->input('rank'),
         ]);
 
         return redirect()->back()->with('status', 'Record deleted successfully!');

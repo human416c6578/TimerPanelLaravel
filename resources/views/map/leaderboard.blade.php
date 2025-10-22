@@ -20,7 +20,7 @@
     <div class="w-4/5">
         <h2 class="text-xl font-semibold mb-4" id="mapTitle">{{$map->name}}</h2>
         <h2 class="text-xl font-semibold mb-4 hidden" id="categoryTitle">Select a category</h2>
-        <div x-data="{ open: false, category_id: null, user_uuid: null }">
+        <div x-data="{ open: false, rank: null, category_name: null, category_id: null, category_id: null, user_uuid: null }">
             <table class="w-full text-sm text-left border-collapse" id="leaderboardTable">
                 <thead class="bg-gray-800 text-indigo-300 uppercase text-xs tracking-wider sticky top-0 z-10">
                     <tr class="bg-gray-800 text-indigo-300">
@@ -49,8 +49,10 @@
                             <form method="POST" action="{{ route('maps.delete.time', $map->uuid) }}">
                                 @csrf
                                 @method('DELETE')
-                                <input type="hidden" name="record_user" :value="user_uuid">
-                                <input type="hidden" name="record_category" :value="category_id">
+                                <input type="hidden" name="user_uuid" :value="user_uuid">
+                                <input type="hidden" name="category_id" :value="category_id">
+                                <input type="hidden" name="category_name" :value="category_name">
+                                <input type="hidden" name="rank" :value="rank">
                                 <button type="submit" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">Confirm Delete</button>
                             </form>
                         </div>
@@ -135,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>
                             <button 
                                 class="bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded text-xs"
-                                x-on:click="open = true; category_id = '${record.CategoryId}'; user_uuid= '${record.UserUUID}';">
+                                x-on:click="open = true; rank = '${record.Rank}'; category_name = '${record.CategoryName}'; category_id = '${record.CategoryId}'; user_uuid= '${record.UserUUID}';">
                                 Delete
                             </button>
                         </td>
