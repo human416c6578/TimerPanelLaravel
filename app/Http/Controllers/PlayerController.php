@@ -16,17 +16,26 @@ use Carbon\Carbon;
 
 class PlayerController extends Controller
 {
+    
     public function index(Request $request)
     {
-        $query = GameUser::query();
+        $search = $request->input('search', '');
+        $page = $request->input('page', 1);
+        $perPage = 15;
 
-        if ($search = $request->input('search')) {
-            $query
-                ->where('name', 'like', '%' . $search . '%')
-                ->orWhere('auth_id', 'like', '%' . $search . '%');
-        }
+        $cacheKey = 'players:' . md5($search . ':page:' . $page);
 
-        $players = $query->orderBy('name')->paginate(15);
+        $players = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $perPage) {
+            $query = GameUser::query()
+                ->select('name', 'auth_id', 'uuid');
+
+            if ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('auth_id', 'like', '%' . $search . '%');
+            }
+
+            return $query->orderBy('name')->paginate($perPage);
+        });
 
         if ($request->ajax()) {
             return view('player.partials.players-table', compact('players'))->render();
@@ -37,13 +46,13 @@ class PlayerController extends Controller
 
     public function profile(Request $request, $uuid)
     {
-        $user = GameUser::findOrFail($uuid);
-
         $latestTimes = $this->getLatestTimesFromCache($uuid, $request);
         
         if ($request->ajax() || $request->get('ajax') == 1) {
             return response()->view('player.partials.latest-times', compact('latestTimes'));
         }
+
+        $user = GameUser::select('uuid', 'name', 'auth_id')->where('uuid', $uuid)->firstOrFail();
 
         $authId = $user->auth_id;
 
@@ -142,6 +151,7 @@ class PlayerController extends Controller
 
     public function getUserRankedTimes(string $userUuid): Collection
     {
+        /*
         $query = "
             WITH RankedTimes AS (
                 SELECT 
@@ -161,6 +171,27 @@ class PlayerController extends Controller
             SELECT Rank, MapUUID, MapName, CategoryName, CategoryId, Time, RecordDate, StartSpeed
             FROM RankedTimes
             WHERE UserUUID = ?
+        ";*/
+        $query = "
+            SELECT 
+                rt.rank AS Rank,
+                m.uuid        AS MapUUID,
+                m.name        AS MapName,
+                c.name        AS CategoryName,
+                c.id          AS CategoryId,
+                t.time        AS Time,
+                t.record_date AS RecordDate,
+                t.start_speed AS StartSpeed
+            FROM ranked_times rt
+            JOIN times t 
+                ON t.user_uuid   = rt.user_uuid
+            AND t.map_uuid    = rt.map_uuid
+            AND t.category_id = rt.category_id
+            JOIN maps m 
+                ON m.uuid = t.map_uuid
+            JOIN categories c 
+                ON c.id = t.category_id
+            WHERE rt.user_uuid = ?;
         ";
 
         return collect(DB::connection('game_mysql')->select($query, [$userUuid]));
@@ -168,16 +199,18 @@ class PlayerController extends Controller
 
     public function deleteUserRankedTimes(string $userUuid)
 {
-    $userTimes = Cache::remember("ranked_times_{$userUuid}", 600, function () use ($userUuid) {
-        return $this->getUserRankedTimes($userUuid);
-    });
+    // $userTimes = Cache::remember("ranked_times_{$userUuid}", 600, function () use ($userUuid) {
+    //     return $this->getUserRankedTimes($userUuid);
+    // });
 
-    $userTimes = collect($userTimes);
+    //$userTimes = collect($userTimes);
+
+    $userTimes = $this->getUserRankedTimes($userUuid);
 
     // Only rank 1 times
     $rank1Times = $userTimes->where("Rank", 1);
     $filePaths = [];
-    // Example: unlink files related to these records
+
     foreach ($rank1Times as $time) {
         // Adjust path depending on how files are stored
         $filePath = "/home/csgfxeu/public_html/uploads/recording/{$time->MapName}/[{$time->CategoryName}].rec";

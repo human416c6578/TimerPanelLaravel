@@ -5,6 +5,9 @@ use Livewire\Volt\Volt;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\TimeController;
+use App\Http\Controllers\ReplayController;
+
 
 Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
 Route::get('/players/{uuid}', [PlayerController::class, 'profile'])->name('players.show');
@@ -14,12 +17,15 @@ Route::delete('/players/{uuid}/times', [PlayerController::class, 'deleteUserRank
 
 Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
 Route::get('/maps/{uuid}', [MapController::class, 'show'])->name('maps.show');
+Route::delete('/maps/{uuid}/time', [MapController::class, 'deleteMapRankedTime'])
+    ->name('maps.delete.time');
 
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/proxy', [App\Http\Controllers\ProxyController::class, 'fetch']);
+Route::get('/replays/{map}/{category}', [ReplayController::class, 'show'])->name('replays.show');
+
+Route::get('/', [TimeController::class, 'index'])->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])

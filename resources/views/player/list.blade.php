@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(html => {
                 document.getElementById('playersTable').innerHTML = html;
             });
-        }, 400);
+        }, 100);
     });
 
     // handle pagination clicks
@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.closest('.pagination a')) {
             e.preventDefault();
             const url = e.target.closest('.pagination a').href;
+            url.searchParams.set("ajax", "1");
             fetch(url, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'

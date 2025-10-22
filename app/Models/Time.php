@@ -9,7 +9,8 @@ class Time extends Model
     protected $connection = 'game_mysql';
     protected $table = 'times';
 
-    protected $primaryKey = ['user_uuid', 'map_uuid', 'category_id'];  // composite key
+    // Can't retrieve the record without providing the user_uuid
+    //protected $primaryKey = ['user_uuid', 'map_uuid', 'category_id'];  // composite key
     public $incrementing = false;
     public $timestamps = false;
 

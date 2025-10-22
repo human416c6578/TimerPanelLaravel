@@ -52,16 +52,50 @@
 
             <div>
         @auth
-        <form method="POST" action="{{ route('players.delete.times', $user->uuid) }}">
-            @csrf
-            @method('DELETE')
+        <div x-data="{ open: false }">
+            <!-- Delete button triggers modal -->
             <button 
-                type="submit" 
+                @click="open = true"
                 class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                 Delete Player Times
             </button>
-        </form>
+
+            <!-- Modal -->
+            <div 
+                x-show="open" 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="z-2 fixed inset-0 flex items-center justify-center bg-black/70 bg-opacity-50"
+                style="display: none;">
+                <div 
+                class="bg-white text-black rounded-lg p-6 w-96">
+                    <h2 class="text-lg font-bold mb-4">Confirm Deletion</h2>
+                    <p class="mb-4">Are you sure you want to delete all times for this player? This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-2">
+                        <button 
+                            @click="open = false" 
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                            Cancel
+                        </button>
+                        <form method="POST" action="{{ route('players.delete.times', $user->uuid) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button 
+                                type="submit" 
+                                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                Confirm Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         @endauth
+
 </div>
 
 
@@ -118,6 +152,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js" integrity="sha512-79j1YQOJuI8mLseq9icSQKT6bLlLtWknKwj1OpJZMdPt2pFBry3vQTt+NZuJw7NSd1pHhZlu0s12Ngqfa371EA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 @if (session('status'))
     <script>

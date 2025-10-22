@@ -7,6 +7,8 @@ use App\Models\Map;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+
 
 class MapController extends Controller
 {
@@ -24,7 +26,7 @@ class MapController extends Controller
         $cacheKey = "map_leaderboards_{$mapUuid}";
         $leaderboards = Cache::remember(
             $cacheKey,
-            now()->addMinutes(5),
+            now()->addMinutes(2),
             function () use ($mapUuid) {
                 return DB::connection("game_mysql")->select(
                     <<<SQL
@@ -75,6 +77,27 @@ class MapController extends Controller
             "map" => $map,
             "leaderboards" => $grouped,
         ]);
+    }
+
+    public function deleteMapRankedTime(Request $request, string $uuid)
+    {
+        DB::connection('game_mysql')
+        ->table('times')
+        ->where('map_uuid', $uuid)
+        ->where('category_id', $request->input('record_category'))
+        ->where('user_uuid', $request->input('record_user'))
+        ->delete();
+
+        $cacheKey = "map_leaderboards_{$uuid}";
+        Cache::forget($cacheKey);
+
+        Log::info('Deleting record', [
+            'map_uuid'       => $uuid,
+            'category_id'    => $request->input('record_category'),
+            'user_uuid'      => $request->input('record_user'),
+        ]);
+
+        return redirect()->back()->with('status', 'Record deleted successfully!');
     }
 }
 

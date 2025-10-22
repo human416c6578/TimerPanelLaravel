@@ -8,7 +8,7 @@
 
     <input type="text" id="mapSearch" placeholder="Search maps..." class="w-full px-4 py-2 mb-4 border rounded">
 
-    <ul id="mapList" class="space-y-2">
+    <ul id="mapList" class="space-y-2 max-h-150 overflow-y-auto pr-2">
         @forelse ($maps as $map)
             <li class="bg-gray-800 p-4 rounded hover:bg-gray-700 transition">
                 <a href="{{ route('maps.show', $map->uuid) }}" class="text-indigo-300 hover:underline">
