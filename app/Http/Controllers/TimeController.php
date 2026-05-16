@@ -18,15 +18,30 @@ class TimeController extends Controller
     public function index(Request $request)
     {
         $latestTimes = Cache::remember('latest_times_24h', now()->addMinutes(2), function () {
+            $subQuery = DB::connection('game_mysql')
+                ->table('times')
+                ->select(
+                    'time',
+                    'record_date',
+                    'start_speed',
+                    'user_uuid',
+                    'map_uuid',
+                    'category_id'
+                )
+                ->where('record_date', '>', DB::raw('NOW() - INTERVAL 1 DAY'))
+                ->orderByDesc('record_date')
+                ->limit(50);
+
             return DB::connection('game_mysql')
-                ->table('times as t')
+                ->query()
+                ->fromSub($subQuery, 't')
                 ->select(
                     't.time',
                     't.record_date',
                     't.start_speed',
-                    't.user_uuid as user_uuid',
-                    't.map_uuid as map_uuid',
-                    't.category_id as category_id',
+                    't.user_uuid',
+                    't.map_uuid',
+                    't.category_id',
                     'u.name as user_name',
                     'u.auth_id',
                     'm.name as map_name',
@@ -41,9 +56,7 @@ class TimeController extends Controller
                         ->on('rt.map_uuid', '=', 't.map_uuid')
                         ->on('rt.category_id', '=', 't.category_id');
                 })
-                ->where('t.record_date', '>', DB::raw('NOW() - INTERVAL 1 DAY'))
                 ->orderByDesc('t.record_date')
-                ->limit(50)
                 ->get();
         });
 
