@@ -1,40 +1,32 @@
-<div class="speed-panel overflow-hidden rounded-lg">
-    <div class="overflow-x-auto">
-        <table class="w-full min-w-[760px] text-left text-sm">
-            <thead class="speed-table-head text-xs uppercase tracking-wide">
+<x-ui.panel flush>
+    <x-ui.table min="520px">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Steam ID</th>
+                <th class="hidden md:table-cell">UUID</th>
+                <th class="text-right">Profile</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($players as $player)
                 <tr>
-                    <th class="px-5 py-3">Player</th>
-                    <th class="px-5 py-3">Steam ID</th>
-                    <th class="px-5 py-3">UUID</th>
-                    <th class="px-5 py-3 text-right">Profile</th>
+                    <td>
+                        <a href="{{ route('players.show', $player->uuid) }}" class="link">{{ $player->name }}</a>
+                    </td>
+                    <td class="font-mono text-xs text-muted">{{ $player->auth_id }}</td>
+                    <td class="hidden font-mono text-xs text-subtle md:table-cell">{{ $player->uuid }}</td>
+                    <td class="text-right">
+                        <a href="{{ route('players.show', $player->uuid) }}" class="btn btn-ghost btn-sm">View</a>
+                    </td>
                 </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-800">
-                @forelse ($players as $player)
-                    <tr class="speed-row transition">
-                        <td class="px-5 py-4">
-                            <a href="{{ route('players.show', $player->uuid) }}" class="speed-link font-medium">
-                                {{ $player->name }}
-                            </a>
-                        </td>
-                        <td class="px-5 py-4 font-mono text-slate-300">{{ $player->auth_id }}</td>
-                        <td class="speed-muted px-5 py-4 font-mono text-xs">{{ $player->uuid }}</td>
-                        <td class="px-5 py-4 text-right">
-                            <a href="{{ route('players.show', $player->uuid) }}" class="speed-btn-secondary inline-flex items-center px-3 py-2 text-xs">
-                                View
-                            </a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="px-5 py-10 text-center text-slate-500">No players found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
+            @empty
+                <x-ui.empty :colspan="4" message="No players match that search." />
+            @endforelse
+        </tbody>
+    </x-ui.table>
+</x-ui.panel>
 
 <div class="mt-4">
-    {{ $players->links() }}
+    {{ $players->appends(request()->only('search'))->links('components.ui.pagination') }}
 </div>

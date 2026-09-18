@@ -12,7 +12,8 @@ RUN install-php-extensions \
         opcache \
         intl \
         zip \
-        pcntl
+        pcntl \
+        bcmath
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY docker/php/app.ini /usr/local/etc/php/conf.d/zz-app.ini
@@ -102,7 +103,8 @@ FROM base AS production
 ENV APP_ENV=production \
     APP_DEBUG=false \
     SERVER_NAME=:8080 \
-    RUN_MIGRATIONS=true
+    RUN_MIGRATIONS=true \
+    TELESCOPE_ENABLED=false
 
 COPY --chown=www-data:www-data laravel/ ./
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor

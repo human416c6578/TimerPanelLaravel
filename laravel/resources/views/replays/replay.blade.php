@@ -1,109 +1,99 @@
-@extends('layouts.app')
+<x-layouts.app :title="$mapName.' · '.$categoryName">
+    <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_16rem]">
+        <x-ui.panel flush>
+            <header class="panel-header">
+                <div class="min-w-0">
+                    <a href="{{ route('maps.show', $time->map_uuid) }}" class="link text-xs">← Map leaderboard</a>
+                    <h1 class="mt-1 truncate text-xl font-bold">{{ $mapName }}</h1>
+                    <p class="mt-0.5 text-sm text-muted">{{ $categoryName }} · record line</p>
+                </div>
 
-@section('title', $mapName . ' - ' . $categoryName . ' Replay')
+                <button type="button" id="downloadBtn" class="btn btn-primary btn-sm">Download .rec</button>
+            </header>
 
-@section('content')
-<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-    <section class="speed-panel overflow-hidden rounded-lg">
-        <div class="flex flex-col gap-3 border-b border-cyan-400/10 px-5 py-4 md:flex-row md:items-center md:justify-between">
-            <div class="min-w-0">
-                <a href="{{ route('maps.show', $time->map_uuid) }}" class="speed-link text-sm font-medium">Map leaderboard</a>
-                <h1 class="mt-1 truncate text-2xl font-bold text-white">{{ $mapName }}</h1>
-                <p class="speed-muted text-sm">{{ $categoryName }} replay line</p>
+            <div class="bg-black p-3">
+                <div id="hlv-target" class="h-[420px] overflow-hidden rounded-lg sm:h-[540px] xl:h-[620px]"></div>
             </div>
-            <button
-                id="downloadBtn"
-                class="speed-btn-danger inline-flex items-center justify-center px-4 py-2 text-sm"
-            >
-                Download replay
-            </button>
-        </div>
+        </x-ui.panel>
 
-        <div class="bg-black/40 p-3 sm:p-4">
-            <div class="overflow-hidden rounded-lg border border-cyan-400/20 bg-black">
-                <div id="hlv-target" class="h-[420px] sm:h-[560px] xl:h-[640px]"></div>
-            </div>
-        </div>
-    </section>
+        <aside class="space-y-3">
+            <x-ui.panel flush title="Current record" eyebrow="This category">
+                <dl class="divide-y divide-line text-sm">
+                    <div class="flex items-center justify-between gap-4 px-5 py-3">
+                        <dt class="text-muted">Time</dt>
+                        <dd class="time text-gold">@runtime($time->time)</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-5 py-3">
+                        <dt class="text-muted">Recorded</dt>
+                        <dd>{{ $time->record_date ?? 'Unknown' }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between gap-4 px-5 py-3">
+                        <dt class="text-muted">Start speed</dt>
+                        <dd class="tabular">{{ $time->start_speed ?? '—' }}</dd>
+                    </div>
+                </dl>
+            </x-ui.panel>
 
-    <aside class="space-y-6">
-        <section class="speed-panel rounded-lg">
-            <div class="border-b border-cyan-400/10 px-5 py-4">
-                <h2 class="text-lg font-semibold text-white">Categories on this map</h2>
-                <p class="speed-muted mt-1 text-sm">Switch to another fastest replay.</p>
-            </div>
+            <x-ui.panel flush title="Other categories" eyebrow="Same map">
+                <div class="max-h-[26rem] space-y-2 overflow-y-auto p-3">
+                    @forelse ($relatedReplays as $replay)
+                        @php($isCurrent = (int) $replay->category_id === (int) $time->category_id)
 
-            <div class="max-h-[430px] overflow-y-auto p-3">
-                @forelse ($relatedReplays as $replay)
-                    <a
-                        href="{{ route('replays.show', [$replay->map_uuid, $replay->category_id]) }}"
-                        class="mb-2 block rounded-lg border px-3 py-3 transition {{ (int) $replay->category_id === (int) $time->category_id ? 'border-amber-400/70 bg-amber-400/10' : 'speed-card' }}"
-                    >
-                        <div class="flex items-start justify-between gap-3">
+                        <a
+                            href="{{ route('replays.show', [$replay->map_uuid, $replay->category_id]) }}"
+                            @class([
+                                'flex items-start justify-between gap-3 rounded-lg border p-3 transition',
+                                'border-accent bg-accent-soft' => $isCurrent,
+                                'border-line hover:border-line-strong hover:bg-surface-2' => ! $isCurrent,
+                            ])
+                        >
                             <div class="min-w-0">
-                                <p class="truncate font-medium text-white">{{ $replay->category_name }}</p>
-                                <p class="speed-muted mt-1 truncate text-xs">{{ $replay->user_name }}</p>
+                                <p class="truncate text-sm font-medium">{{ $replay->category_name }}</p>
+                                <p class="mt-0.5 truncate text-xs text-muted">{{ $replay->user_name }}</p>
                             </div>
-                            <span class="shrink-0 font-mono text-xs text-amber-200">{{ $replay->time }}</span>
-                        </div>
-                    </a>
-                @empty
-                    <p class="px-2 py-6 text-center text-sm text-slate-500">No other replay categories found.</p>
-                @endforelse
-            </div>
-        </section>
 
-        <section class="speed-panel rounded-lg p-5">
-            <h2 class="text-lg font-semibold text-white">Current record</h2>
-            <dl class="mt-4 space-y-3 text-sm">
-                <div class="flex items-center justify-between gap-4">
-                    <dt class="speed-muted">Time</dt>
-                    <dd class="font-mono text-amber-200">{{ $time->time }}</dd>
+                            <span class="time shrink-0 text-xs">@runtime($replay->time)</span>
+                        </a>
+                    @empty
+                        <p class="px-2 py-8 text-center text-sm text-subtle">No other categories on this map.</p>
+                    @endforelse
                 </div>
-                <div class="flex items-center justify-between gap-4">
-                    <dt class="speed-muted">Recorded</dt>
-                    <dd class="text-slate-200">{{ $time->record_date ?? 'Unknown' }}</dd>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <dt class="speed-muted">Start speed</dt>
-                    <dd class="text-slate-200">{{ $time->start_speed ?? 'N/A' }}</dd>
-                </div>
-            </dl>
-        </section>
-    </aside>
-</div>
+            </x-ui.panel>
+        </aside>
+    </div>
 
-<script src="{{ asset('js/hlviewer.min.js') }}"></script>
+    @push('scripts')
+        <script src="{{ asset('js/hlviewer.min.js') }}"></script>
+        <script>
+            window.addEventListener('load', async () => {
+                const urlBhop = @json(config('replays.fastdl.bhop'));
+                const urlDr = @json(config('replays.fastdl.deathrun'));
+                const downloadUrl = @json(rtrim(config('replays.download_url'), '/'));
+                const mapName = @json($mapName);
+                const categoryName = @json($categoryName);
+                const resourceUrl = mapName.includes('deathrun') ? urlDr : urlBhop;
 
-<script>
-    window.addEventListener('load', async () => {
-        const urlBhop = @json(config('replays.fastdl.bhop'));
-        const urlDr = @json(config('replays.fastdl.deathrun'));
-        const downloadUrl = @json(rtrim(config('replays.download_url'), '/'));
-        const mapName = @json($mapName);
-        const categoryName = @json($categoryName);
-        const resourceUrl = mapName.includes("deathrun") ? urlDr : urlBhop;
+                const paths = {
+                    base: `/proxy?url=${resourceUrl}`,
+                    replays: `/proxy?url=${downloadUrl}`,
+                    maps: `/proxy?url=${resourceUrl}maps`,
+                    wads: `/proxy?url=${resourceUrl}`,
+                    skies: `/proxy?url=${resourceUrl}gfx/env`,
+                    sounds: `/proxy?url=${resourceUrl}sound`,
+                };
 
-        const paths = {
-            base: `/proxy?url=${resourceUrl}`,
-            replays: `/proxy?url=${downloadUrl}`,
-            maps: `/proxy?url=${resourceUrl}maps`,
-            wads: `/proxy?url=${resourceUrl}`,
-            skies: `/proxy?url=${resourceUrl}gfx/env`,
-            sounds: `/proxy?url=${resourceUrl}sound`,
-        };
+                const viewer = HLViewer.init('#hlv-target', { paths });
+                await viewer.load(`${mapName}.bsp`);
+                await viewer.load(`${mapName}/[${categoryName}].rec`);
 
-        const viewer = HLViewer.init('#hlv-target', { paths });
-        await viewer.load(`${mapName}.bsp`);
-        await viewer.load(`${mapName}/[${categoryName}].rec`);
-
-        document.getElementById("downloadBtn").addEventListener("click", () => {
-            const link = document.createElement("a");
-            link.href = `${downloadUrl}/${mapName}/[${categoryName}].rec`;
-            link.download = `${mapName} - [${categoryName}].rec`;
-            link.click();
-            link.remove();
-        });
-    });
-</script>
-@endsection
+                document.getElementById('downloadBtn').addEventListener('click', () => {
+                    const link = document.createElement('a');
+                    link.href = `${downloadUrl}/${mapName}/[${categoryName}].rec`;
+                    link.download = `${mapName} - [${categoryName}].rec`;
+                    link.click();
+                    link.remove();
+                });
+            });
+        </script>
+    @endpush
+</x-layouts.app>

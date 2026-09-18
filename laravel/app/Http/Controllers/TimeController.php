@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\GameServerQuery;
+use App\Services\ServerStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TimeController extends Controller
 {
-    public function index(Request $request, GameServerQuery $serverQuery)
+    public function index(Request $request, ServerStatus $serverStatus)
     {
         $latestTimes = Cache::remember(
             'latest_times_24h',
@@ -101,63 +101,7 @@ class TimeController extends Controller
             },
         );
 
-        $servers = Cache::remember(
-            'home_live_servers',
-            now()->addSeconds(45),
-            function () use ($serverQuery) {
-                return collect([
-                    [
-                        'name' => 'Bhop',
-                        'host' => 'bhop.laleagane.ro',
-                        'port' => 27015,
-                        'aliases' => [],
-                    ],
-                    [
-                        'name' => 'Deathrun',
-                        'host' => 'dr.laleagane.ro',
-                        'port' => 27015,
-                        'aliases' => ['dr.llg.ro'],
-                    ],
-                    [
-                        'name' => 'Speedrun',
-                        'host' => 'bhop.laleagane.ro',
-                        'port' => 27016,
-                        'aliases' => [],
-                    ],
-                    [
-                        'name' => 'Bhop Brazil',
-                        'host' => '190.115.197.245',
-                        'port' => 27015,
-                        'aliases' => [],
-                    ],
-                ])->map(function ($server) use ($serverQuery) {
-                    $queryHosts = array_merge(
-                        [$server['host']],
-                        $server['aliases'],
-                    );
-                    $info = null;
-                    $resolvedHost = $server['host'];
-
-                    foreach ($queryHosts as $host) {
-                        $info = $serverQuery->info($host, $server['port']);
-
-                        if ($info !== null) {
-                            $resolvedHost = $host;
-                            break;
-                        }
-                    }
-
-                    return array_merge($server, [
-                        'query_host' => $resolvedHost,
-                        'online' => $info !== null,
-                        'map' => $info['map'] ?? null,
-                        'players' => $info['players'] ?? null,
-                        'max_players' => $info['max_players'] ?? null,
-                        'server_name' => $info['name'] ?? null,
-                    ]);
-                });
-            },
-        );
+        $servers = $serverStatus->all();
 
         return view('welcome', compact('latestTimes', 'homeStats', 'servers'));
     }

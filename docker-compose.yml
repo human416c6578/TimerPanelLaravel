@@ -14,18 +14,24 @@ services:
         required: false
     environment:
       APP_URL: ${APP_URL:-http://localhost:8080}
-      RUN_MIGRATIONS: "true"
-      # The application's own data (users, sessions, cache, telescope) is
-      # sqlite on a named volume. The game database is external and is only
-      # ever read through GAME_DB_* below.
-      DB_CONNECTION: sqlite
-      DB_DATABASE: /app/database/database.sqlite
+      # Off by default: the application database may well be a live server.
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
+      # The application's own data (users, sessions, cache, telescope). Falls
+      # back to sqlite on a named volume when .env says nothing.
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      DB_DATABASE: ${DB_DATABASE:-/app/database/database.sqlite}
+      # The game database is external and only ever read through GAME_DB_*.
       GAME_DB_HOST: ${GAME_DB_HOST:?set GAME_DB_HOST in .env}
       GAME_DB_PORT: ${GAME_DB_PORT:-3306}
       GAME_DB_DATABASE: ${GAME_DB_DATABASE:-game_db}
       GAME_DB_USERNAME: ${GAME_DB_USERNAME:-game_user}
       GAME_DB_PASSWORD: ${GAME_DB_PASSWORD:-}
       REPLAY_STORAGE_PATH: /srv/replays
+    # Lets the container reach a database running on the host: point
+    # GAME_DB_HOST / DB_HOST at host.docker.internal instead of localhost,
+    # which inside a container means the container itself.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - app-storage:/app/storage
       - app-database:/app/database

@@ -1,73 +1,48 @@
-@extends('layouts.app')
+<x-layouts.app title="Maps">
+    @php($names = $maps->map(fn ($map) => strtolower($map->name))->values())
 
-@section('title', 'Maps')
+    <div class="space-y-3" x-data="{ query: '' }">
+        <x-ui.page-header
+            eyebrow="Course library"
+            title="Maps"
+            :description="number_format($maps->count()).' routes on the servers. Pick one and see who owns it.'"
+        >
+            <x-slot:actions>
+                <x-ui.search id="map-search" label="Search maps" placeholder="filter maps…" x-model="query" class="w-full md:w-80" />
+            </x-slot:actions>
+        </x-ui.page-header>
 
-@section('content')
-<div class="space-y-6">
-    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-            <p class="speed-eyebrow text-sm font-bold">Course library</p>
-            <h1 class="text-3xl font-bold text-white">Maps</h1>
-            <p class="speed-muted mt-2 text-sm">{{ $maps->count() }} routes available for record hunting.</p>
+        <div class="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+            @forelse ($maps as $map)
+                @php($mode = str_contains(strtolower($map->name), 'deathrun') ? 'DR' : 'BH')
+
+                <a
+                    href="{{ route('maps.show', $map->uuid) }}"
+                    class="group flex items-center gap-2.5 bg-surface-1 px-3 py-2 hover:bg-surface-2"
+                    x-show="! query || {{ Js::from(strtolower($map->name)) }}.includes(query.trim().toLowerCase())"
+                >
+                    <span class="flex size-7 shrink-0 items-center justify-center border border-line bg-surface-2 text-[10px] font-bold text-muted group-hover:text-accent">
+                        {{ $mode }}
+                    </span>
+
+                    <span class="min-w-0 flex-1">
+                        <span class="block truncate text-[12px] font-bold group-hover:text-accent">{{ $map->name }}</span>
+                        <span class="mt-0.5 block truncate font-mono text-[11px] text-subtle">{{ $map->uuid }}</span>
+                    </span>
+
+                    <span class="font-mono text-xs text-subtle transition group-hover:text-accent">→</span>
+                </a>
+            @empty
+                <p class="bg-surface-1 px-4 py-12 text-center text-sm text-subtle">No maps found.</p>
+            @endforelse
         </div>
 
-        <div class="w-full md:max-w-md">
-            <label for="mapSearch" class="sr-only">Search maps</label>
-            <input
-                type="search"
-                id="mapSearch"
-                placeholder="Search maps..."
-                class="speed-input w-full rounded-lg px-4 py-3 text-sm"
-            >
-        </div>
+        <p
+            x-show="query && ! {{ Js::from($names) }}.some((name) => name.includes(query.trim().toLowerCase()))"
+            x-cloak
+            class="panel px-5 py-12 text-center text-sm text-subtle"
+        >
+            No maps match that filter.
+        </p>
     </div>
-
-    <div id="mapList" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        @forelse ($maps as $map)
-            @php
-                $mode = str_contains(strtolower($map->name), 'deathrun') ? 'Deathrun' : 'Bhop';
-            @endphp
-            <a
-                href="{{ route('maps.show', $map->uuid) }}"
-                class="map-card speed-card group rounded-lg p-4 transition"
-                data-map-name="{{ strtolower($map->name) }}"
-            >
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <h2 class="truncate text-base font-semibold text-white group-hover:text-amber-200">{{ $map->name }}</h2>
-                        <p class="speed-muted mt-2 truncate font-mono text-xs">{{ $map->uuid }}</p>
-                    </div>
-                    <span class="speed-pill shrink-0 rounded px-2 py-1 text-xs font-semibold">{{ $mode }}</span>
-                </div>
-            </a>
-        @empty
-            <p class="text-slate-500">No maps found.</p>
-        @endforelse
-    </div>
-
-    <div id="emptyMaps" class="speed-panel hidden rounded-lg px-5 py-10 text-center text-slate-500">
-        No maps match your search.
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('mapSearch');
-        const cards = document.querySelectorAll('.map-card');
-        const emptyState = document.getElementById('emptyMaps');
-
-        input.addEventListener('input', () => {
-            const search = input.value.trim().toLowerCase();
-            let visible = 0;
-
-            cards.forEach(card => {
-                const isMatch = card.dataset.mapName.includes(search);
-                card.classList.toggle('hidden', !isMatch);
-                visible += isMatch ? 1 : 0;
-            });
-
-            emptyState.classList.toggle('hidden', visible !== 0);
-        });
-    });
-</script>
-@endsection
+</x-layouts.app>

@@ -1,138 +1,103 @@
-@extends('layouts.app')
-
-@section('title', 'Leaderboard')
-
-@section('content')
-
 @php
-    function formatTimePlayed($seconds)
-    {
-        $hours = floor($seconds / 3600);
-        $minutes = floor(($seconds % 3600) / 60);
-        $seconds = $seconds % 60;
-
-        return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
-    }
+    $podiumOrder = [1, 0, 2]; // silver, gold, bronze — tallest in the middle
 @endphp
 
+<x-layouts.app title="Leaderboard">
+    <div class="space-y-3" x-data="{ tab: 'played' }">
+        <x-ui.page-header
+            eyebrow="Season standings"
+            title="Leaderboard"
+            description="Who lives on the server, and who actually finishes maps."
+        >
+            <x-slot:actions>
+                <div class="flex border-y border-e border-line">
+                    <button type="button" class="nav-link" :class="tab === 'played' && 'is-active'" x-on:click="tab = 'played'">Played time</button>
+                    <button type="button" class="nav-link" :class="tab === 'ranking' && 'is-active'" x-on:click="tab = 'ranking'">Ranking</button>
+                </div>
+            </x-slot:actions>
+        </x-ui.page-header>
 
-<div class="space-y-6">
-    <div class="speed-panel rounded-lg p-6">
-        <p class="speed-eyebrow text-sm font-bold">Season standings</p>
-        <h1 class="mt-2 text-4xl font-black text-white">Leaderboard</h1>
-        <p class="speed-muted mt-2 text-sm">Compare server grinders by total playtime or ranked score.</p>
+        {{-- Played time --}}
+        <div x-show="tab === 'played'" class="space-y-3">
+            @if ($topPlayedTimes->count() >= 3)
+                <div class="grid grid-cols-3 items-end gap-2">
+                    @foreach ($podiumOrder as $slot)
+                        @php($record = $topPlayedTimes[$slot])
+                        @php($place = $slot + 1)
 
-    <div class="mt-6 flex flex-wrap gap-3">
-        <button id="btnPlayedTime" 
-                class="speed-btn-primary px-5 py-2 text-sm">
-            Played Time
-        </button>
-        <button id="btnRanking" 
-                class="speed-btn-secondary px-5 py-2 text-sm">
-            Ranking
-        </button>
-    </div>
-    </div>
+                        <div @class([
+                            'panel flex flex-col items-center gap-1 px-3 text-center',
+                            'bracket border-gold py-8' => $place === 1,
+                            'py-5' => $place !== 1,
+                        ])>
+                            <span @class(['rank', 'rank-'.$place])>#{{ $place }}</span>
 
-    <div id="playedTimeBoard" class="speed-panel overflow-hidden rounded-lg">
-        <div class="border-b border-cyan-400/10 px-5 py-4">
-            <h2 class="text-xl font-semibold text-white">Top Played Time</h2>
-            <p class="speed-muted text-sm">Most time spent routing and practicing.</p>
+                            <p @class([
+                                'mt-1.5 w-full truncate font-bold uppercase',
+                                'text-lg text-gold' => $place === 1,
+                                'text-[12px]' => $place !== 1,
+                            ])>{{ $record->name }}</p>
+
+                            <p @class(['time text-xs', 'text-gold/80' => $place === 1, 'text-muted' => $place !== 1])>@played($record->time_played)</p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            <x-ui.panel flush title="Most time on the server" eyebrow="Hours logged">
+                <x-ui.table min="420px">
+                    <thead>
+                        <tr>
+                            <th class="w-20">#</th>
+                            <th>Player</th>
+                            <th class="text-right">Time played</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($topPlayedTimes as $index => $record)
+                            <tr>
+                                <td><x-ui.rank :rank="$index + 1" /></td>
+                                <td class="font-medium">{{ $record->name }}</td>
+                                <td class="time text-right">@played($record->time_played)</td>
+                            </tr>
+                        @empty
+                            <x-ui.empty :colspan="3" message="No played time recorded yet." />
+                        @endforelse
+                    </tbody>
+                </x-ui.table>
+            </x-ui.panel>
         </div>
-        <table class="w-full text-left text-sm">
-            <thead class="speed-table-head uppercase tracking-wide">
-                <tr>
-                    <th class="px-5 py-3">Rank</th>
-                    <th class="px-5 py-3">Player</th>
-                    <th class="px-5 py-3">Time Played</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-800">
-                @forelse ($topPlayedTimes as $index => $record)
-                    <tr class="speed-row transition">
-                        <td class="px-5 py-3 font-mono font-semibold text-amber-200">
-                            #{{ $index + 1 }}
-                        </td>
-                        <td class="px-5 py-3 font-medium text-white">{{ $record->name }}</td>
-                        <td class="px-5 py-3 font-mono text-cyan-100">{{ formatTimePlayed($record->time_played) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="px-5 py-8 text-center text-slate-500">No records found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+
+        {{-- Ranking --}}
+        <div x-show="tab === 'ranking'" x-cloak class="space-y-3">
+            <x-ui.panel flush title="Ranked score" eyebrow="Medals earned">
+                <x-ui.table min="520px">
+                    <thead>
+                        <tr>
+                            <th class="w-20">#</th>
+                            <th>Player</th>
+                            <th class="text-right">Score</th>
+                            <th class="text-right">Gold</th>
+                            <th class="text-right">Silver</th>
+                            <th class="text-right">Bronze</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($topRankings as $index => $ranking)
+                            <tr>
+                                <td><x-ui.rank :rank="$index + 1" /></td>
+                                <td class="font-medium">{{ $ranking->user->name ?? 'Unknown' }}</td>
+                                <td class="text-right font-mono font-semibold tabular text-accent">{{ number_format($ranking->score) }}</td>
+                                <td class="text-right tabular text-gold">{{ $ranking->gold }}</td>
+                                <td class="text-right tabular text-silver">{{ $ranking->silver }}</td>
+                                <td class="text-right tabular text-bronze">{{ $ranking->bronze }}</td>
+                            </tr>
+                        @empty
+                            <x-ui.empty :colspan="6" message="No rankings yet." />
+                        @endforelse
+                    </tbody>
+                </x-ui.table>
+            </x-ui.panel>
+        </div>
     </div>
-
-    <div id="rankingBoard" class="speed-panel hidden overflow-hidden rounded-lg">
-    <div class="border-b border-cyan-400/10 px-5 py-4">
-        <h2 class="text-xl font-semibold text-white">Top Rankings</h2>
-        <p class="speed-muted text-sm">Score and medal totals from ranked completions.</p>
-    </div>
-    <table class="w-full text-left text-sm">
-        <thead class="speed-table-head uppercase tracking-wide">
-            <tr>
-                <th class="px-5 py-3">Rank</th>
-                <th class="px-5 py-3">Player</th>
-                <th class="px-5 py-3">Score</th>
-                <th class="px-5 py-3">Bronze</th>
-                <th class="px-5 py-3">Silver</th>
-                <th class="px-5 py-3">Gold</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-800">
-            @forelse ($topRankings as $index => $ranking)
-                <tr class="speed-row transition">
-                    <td class="px-5 py-3 font-mono font-semibold text-amber-200">
-                        #{{ $index + 1 }}
-                    </td>
-                    <td class="px-5 py-3 font-medium text-white">{{ $ranking->user->name ?? 'Unknown' }}</td>
-                    <td class="px-5 py-3 font-mono text-cyan-100">{{ $ranking->score }}</td>
-                    <td class="px-5 py-3">{{ $ranking->bronze }}</td>
-                    <td class="px-5 py-3">{{ $ranking->silver }}</td>
-                    <td class="px-5 py-3 text-amber-200">{{ $ranking->gold }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" class="px-5 py-8 text-center text-slate-500">No rankings found.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const btnPlayedTime = document.getElementById('btnPlayedTime');
-    const btnRanking = document.getElementById('btnRanking');
-    const playedTimeBoard = document.getElementById('playedTimeBoard');
-    const rankingBoard = document.getElementById('rankingBoard');
-
-    function activatePlayedTime() {
-        playedTimeBoard.classList.remove('hidden');
-        rankingBoard.classList.add('hidden');
-        btnPlayedTime.classList.add('speed-btn-primary');
-        btnPlayedTime.classList.remove('speed-btn-secondary');
-        btnRanking.classList.add('speed-btn-secondary');
-        btnRanking.classList.remove('speed-btn-primary');
-    }
-
-    function activateRanking() {
-        rankingBoard.classList.remove('hidden');
-        playedTimeBoard.classList.add('hidden');
-        btnRanking.classList.add('speed-btn-primary');
-        btnRanking.classList.remove('speed-btn-secondary');
-        btnPlayedTime.classList.add('speed-btn-secondary');
-        btnPlayedTime.classList.remove('speed-btn-primary');
-    }
-
-    btnPlayedTime.addEventListener('click', activatePlayedTime);
-    btnRanking.addEventListener('click', activateRanking);
-
-    // Default active
-    activatePlayedTime();
-});
-</script>
-@endsection
+</x-layouts.app>

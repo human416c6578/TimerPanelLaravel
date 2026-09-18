@@ -25,13 +25,19 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
 fi
 
 # Caching config/routes/views is a production win but makes local editing
-# confusing, so only do it outside of `local`.
+# confusing, so only do it outside of `local`. None of this is worth refusing
+# to boot over — a cache store that happens to live in an unreachable database
+# should surface as a page error, not as a crash loop.
+warn_only() {
+    "$@" || echo "entrypoint: '$*' failed, continuing" >&2
+}
+
 if [ "${APP_ENV:-production}" = "local" ]; then
-    php artisan optimize:clear --no-ansi
+    warn_only php artisan optimize:clear --no-ansi
 else
-    php artisan config:cache --no-ansi
-    php artisan route:cache --no-ansi
-    php artisan view:cache --no-ansi
+    warn_only php artisan config:cache --no-ansi
+    warn_only php artisan route:cache --no-ansi
+    warn_only php artisan view:cache --no-ansi
 fi
 
 exec "$@"
