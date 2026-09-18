@@ -1,0 +1,39 @@
+# Development overlay: bind-mounts laravel/ into the container and runs Vite
+# with hot reload.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev up
+#
+services:
+  app:
+    build:
+      target: dev
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+    volumes:
+      - ./laravel:/app
+      # Keep the image's dependencies and built assets, not the host's.
+      - vendor:/app/vendor
+      - /app/node_modules
+      - /app/public/build
+
+  vite:
+    image: node:22-alpine
+    profiles: [dev]
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    depends_on:
+      - app
+    volumes:
+      - ./laravel:/app
+      # Tailwind scans vendor/livewire/flux, so Vite needs the same vendor/
+      # tree the app container got from the image.
+      - vendor:/app/vendor:ro
+
+volumes:
+  vendor:
