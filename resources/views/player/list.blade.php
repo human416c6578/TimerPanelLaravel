@@ -1,14 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Player List')
+@section('title', 'Players')
 
 @section('content')
-<div class="mb-4">
-    <input type="text" id="searchInput" placeholder="Search players..." class="w-full p-2 border rounded" />
-</div>
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+            <p class="speed-eyebrow text-sm font-bold">Runner directory</p>
+            <h1 class="text-3xl font-bold text-white">Players</h1>
+            <p class="speed-muted mt-2 text-sm">Search by name or Steam ID and inspect routes, stats, and records.</p>
+        </div>
 
-<div id="playersTable">
-    @include('player.partials.players-table', ['players' => $players])
+        <div class="w-full md:max-w-md">
+            <label for="searchInput" class="sr-only">Search players</label>
+            <input
+                type="search"
+                id="searchInput"
+                placeholder="Search players..."
+                class="speed-input w-full rounded-lg px-4 py-3 text-sm"
+            >
+        </div>
+    </div>
+
+    <div id="playersTable">
+        @include('player.partials.players-table', ['players' => $players])
+    </div>
 </div>
 
 <script>
@@ -28,25 +44,29 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(html => {
                 document.getElementById('playersTable').innerHTML = html;
             });
-        }, 100);
+        }, 150);
     });
 
-    // handle pagination clicks
     document.addEventListener('click', function (e) {
-        if (e.target.closest('.pagination a')) {
-            e.preventDefault();
-            const url = e.target.closest('.pagination a').href;
-            url.searchParams.set("ajax", "1");
-            fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('playersTable').innerHTML = html;
-            });
+        const link = e.target.closest('.pagination a');
+
+        if (!link) {
+            return;
         }
+
+        e.preventDefault();
+        const url = new URL(link.href);
+        url.searchParams.set('ajax', '1');
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('playersTable').innerHTML = html;
+        });
     });
 });
 </script>

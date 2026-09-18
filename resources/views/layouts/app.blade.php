@@ -7,48 +7,47 @@
     @vite('resources/css/app.css')
     @yield('styles')
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col">
+<body class="speed-shell font-sans min-h-screen flex flex-col">
 
-    <header class="bg-gray-900 shadow p-4">
-        <div class="container mx-auto flex items-center justify-between">
-            <!-- Logo / Title -->
-            <a href="{{ url('/') }}" class="text-2xl font-bold text-indigo-400">Timer Panel</a>
+    <header class="speed-header sticky top-0 z-40 px-4 py-3">
+        <div class="container mx-auto flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <a href="{{ url('/') }}" class="speed-brand flex items-center gap-3 text-xl font-black uppercase">
+                <span class="speed-brand-mark block h-9 w-9 rounded-md"></span>
+                <span>Timer Panel</span>
+            </a>
 
-            <!-- Navigation -->
-            <nav class="space-x-6 text-gray-300 font-medium">
-                <a href="{{ url('/') }}" class="hover:text-white">Home</a>
-                <a href="{{ url('/leaderboard') }}" class="hover:text-white">Leaderboard</a>
-                <a href="{{ url('/maps') }}" class="hover:text-white">Maps</a>
-                <a href="{{ url('/players') }}" class="hover:text-white">Players</a>
-                <a href="{{ url('/replays') }}" class="hover:text-white">Replays</a>
+            <nav class="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                <a href="{{ url('/') }}" class="speed-nav-link {{ request()->routeIs('home') ? 'is-active' : '' }}">Live Feed</a>
+                <a href="{{ url('/leaderboard') }}" class="speed-nav-link {{ request()->routeIs('leaderboard.index') ? 'is-active' : '' }}">Ranks</a>
+                <a href="{{ url('/maps') }}" class="speed-nav-link {{ request()->routeIs('maps.*') ? 'is-active' : '' }}">Maps</a>
+                <a href="{{ url('/players') }}" class="speed-nav-link {{ request()->routeIs('players.*') ? 'is-active' : '' }}">Players</a>
+                <a href="{{ url('/replays') }}" class="speed-nav-link {{ request()->routeIs('replays.*') ? 'is-active' : '' }}">Replays</a>
             </nav>
 
-            <!-- Auth buttons -->
             @if (Route::has('login'))
-                <nav class="flex items-center gap-3">
+                <nav class="flex flex-wrap items-center gap-2 text-sm">
                     @auth
                         <a href="{{ url('/dashboard') }}"
-                        class="px-4 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                        class="speed-btn-primary px-4 py-2">
                             Dashboard
                         </a>
 
-                        <!-- Logout -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit"
-                                    class="px-4 py-1.5 rounded border border-gray-700 text-gray-300 hover:bg-red-600 hover:text-white transition cursor-pointer">
+                                    class="speed-btn-danger cursor-pointer px-4 py-2">
                                 Logout
                             </button>
                         </form>
                     @else
                         <a href="{{ route('login') }}"
-                        class="px-4 py-1.5 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                        class="speed-btn-secondary px-4 py-2">
                             Log in
                         </a>
 
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}"
-                            class="px-4 py-1.5 rounded border border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                            class="speed-btn-primary px-4 py-2">
                                 Register
                             </a>
                         @endif
@@ -58,17 +57,16 @@
         </div>
     </header>
 
-    <main class="container mx-auto px-6 py-6 flex-grow">
+    <main class="container mx-auto flex-grow px-4 py-6 sm:px-6">
         @yield('content')
     </main>
 
-    <footer class="bg-gray-900 py-4 text-center text-sm text-gray-500 border-t border-gray-700">
-        &copy; {{ date('Y') }} Timer Panel. All rights reserved.
+    <footer class="border-t border-cyan-400/10 bg-black/30 py-4 text-center text-sm text-slate-500">
+        &copy; {{ date('Y') }} Timer Panel. Split faster.
     </footer>
 
     @yield('scripts')
     @stack('scripts')
 </body>
 </html>
-
 

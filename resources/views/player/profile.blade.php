@@ -4,11 +4,13 @@
 
 
 @section('content')
-<div class="flex gap-10 min-h-[75vh]">
+<div class="grid min-h-[75vh] gap-6 xl:grid-cols-[22rem_minmax(0,1fr)]">
 
-    <!-- Profile Card -->
-<div class="w-full md:w-1/3 bg-gray-900 text-white rounded-xl shadow-lg p-6 space-y-6">
-    <h2 class="text-2xl font-bold text-indigo-400 border-b border-gray-700 pb-2">Player Profile</h2>
+<div class="speed-panel rounded-lg p-6 text-white space-y-6">
+    <div class="border-b border-cyan-400/10 pb-4">
+        <p class="speed-eyebrow text-xs font-bold">Runner profile</p>
+        <h2 class="mt-1 text-2xl font-bold text-white">Player Profile</h2>
+    </div>
 
     @if($steamData)
         <div class="flex flex-col items-center space-y-3">
@@ -21,7 +23,7 @@
                     <img src="https://flagcdn.com/48x36/{{ strtolower($user->nationality) }}.png" alt="{{ $user->nationality }}" class="w-6 h-4 rounded shadow" />
                 @endif
                 <a href="https://steamcommunity.com/profiles/{{ $steamData['steamid64'] ?? $user->auth_id  }}" target="_blank"
-                   class="text-xl font-semibold hover:underline">
+                   class="speed-link text-xl font-semibold">
                     {{ $user->name ?? 'Unknown' }}
                 </a>
             </div>
@@ -30,24 +32,24 @@
 
     <div class="space-y-2">
         <div>
-            <p class="text-sm text-indigo-300 uppercase font-semibold">Auth ID</p>
-            <p class="text-sm font-mono text-gray-400 break-words">{{ $user->auth_id }}</p>
+            <p class="speed-eyebrow text-sm font-semibold">Auth ID</p>
+            <p class="speed-muted text-sm font-mono break-words">{{ $user->auth_id }}</p>
         </div>
     </div>
 
     <!-- Stats Section -->
-    <div class="pt-4 border-t border-gray-700 space-y-3">
-        <h3 class="text-lg font-bold text-indigo-400">Stats</h3>
+    <div class="space-y-3 border-t border-cyan-400/10 pt-4">
+        <h3 class="text-lg font-bold text-white">Stats</h3>
         
         <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
-                <p class="text-indigo-300 uppercase font-semibold">Total Time</p>
-                <p class="text-indigo-100 font-bold">{{ round($totalTimePlayed / 60 / 60, 2) }} hrs</p>
+                <p class="speed-eyebrow text-xs font-semibold">Total Time</p>
+                <p class="font-bold text-amber-200">{{ round($totalTimePlayed / 60 / 60, 2) }} hrs</p>
             </div>
 
             <div>
-                <p class="text-indigo-300 uppercase font-semibold">Total Runs</p>
-                <p class="text-indigo-100 font-bold">{{ $totalTimes }}</p>
+                <p class="speed-eyebrow text-xs font-semibold">Total Runs</p>
+                <p class="font-bold text-amber-200">{{ $totalTimes }}</p>
             </div>
 
             <div>
@@ -56,7 +58,7 @@
             <!-- Delete button triggers modal -->
             <button 
                 @click="open = true"
-                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                class="speed-btn-danger py-2 px-4">
                 Delete Player Times
             </button>
 
@@ -72,13 +74,13 @@
                 class="z-2 fixed inset-0 flex items-center justify-center bg-black/70 bg-opacity-50"
                 style="display: none;">
                 <div 
-                class="bg-white text-black rounded-lg p-6 w-96">
+                class="rounded-lg border border-cyan-400/20 bg-slate-950 p-6 text-slate-100 w-96">
                     <h2 class="text-lg font-bold mb-4">Confirm Deletion</h2>
                     <p class="mb-4">Are you sure you want to delete all times for this player? This action cannot be undone.</p>
                     <div class="flex justify-end space-x-2">
                         <button 
                             @click="open = false" 
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                            class="speed-btn-secondary py-2 px-4">
                             Cancel
                         </button>
                         <form method="POST" action="{{ route('players.delete.times', $user->uuid) }}">
@@ -86,7 +88,7 @@
                             @method('DELETE')
                             <button 
                                 type="submit" 
-                                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                class="speed-btn-danger py-2 px-4">
                                 Confirm Delete
                             </button>
                         </form>
@@ -102,8 +104,8 @@
             {{-- Add more stats if available --}}
             {{-- 
             <div>
-                <p class="text-indigo-300 uppercase font-semibold">Maps Finished</p>
-                <p class="text-indigo-100 font-bold">XX</p>
+                <p class="speed-eyebrow font-semibold">Maps Finished</p>
+                <p class="font-bold text-amber-200">XX</p>
             </div>
             --}}
         </div>
@@ -112,12 +114,11 @@
 
 
     <!-- Right Section with Tabs -->
-<div class="flex-1 text-white">
-    <div class="bg-gray-900 rounded-xl shadow-lg h-[750px]">
-        <!-- Tabs -->
-        <div class="flex border-b border-gray-700 text-indigo-400">
-            <button class="tab-button px-6 py-3 font-semibold hover:bg-gray-800 active" data-tab="time">Played Time</button>
-            <button class="tab-button px-6 py-3 font-semibold hover:bg-gray-800" data-tab="records">Records</button>
+<div class="text-white">
+    <div class="speed-panel rounded-lg h-[750px]">
+        <div class="flex border-b border-cyan-400/10 text-cyan-200">
+            <button class="tab-button px-6 py-3 font-semibold hover:bg-cyan-400/10 active" data-tab="time">Played Time</button>
+            <button class="tab-button px-6 py-3 font-semibold hover:bg-cyan-400/10" data-tab="records">Records</button>
         </div>
 
         <!-- Time Played Tab -->
@@ -131,7 +132,7 @@
                 <input
                     type="text"
                     id="searchInput"
-                    class="bg-gray-800 border border-gray-600 rounded px-4 py-2 w-full text-white placeholder-gray-400"
+                    class="speed-input rounded px-4 py-2 w-full"
                     placeholder="Search by map"
                 />
             </div>
@@ -171,10 +172,10 @@
     // Tabs toggle
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active', 'border-b-2', 'border-indigo-500'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active', 'border-b-2', 'border-amber-400'));
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
 
-            btn.classList.add('active', 'border-b-2', 'border-indigo-500');
+            btn.classList.add('active', 'border-b-2', 'border-amber-400');
             document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
         });
     });

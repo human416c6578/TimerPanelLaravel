@@ -3,35 +3,70 @@
 @section('title', 'Maps')
 
 @section('content')
-<div class="max-w-4xl mx-auto mt-6">
-    <h1 class="text-2xl font-bold mb-4">Maps</h1>
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+            <p class="speed-eyebrow text-sm font-bold">Course library</p>
+            <h1 class="text-3xl font-bold text-white">Maps</h1>
+            <p class="speed-muted mt-2 text-sm">{{ $maps->count() }} routes available for record hunting.</p>
+        </div>
 
-    <input type="text" id="mapSearch" placeholder="Search maps..." class="w-full px-4 py-2 mb-4 border rounded">
+        <div class="w-full md:max-w-md">
+            <label for="mapSearch" class="sr-only">Search maps</label>
+            <input
+                type="search"
+                id="mapSearch"
+                placeholder="Search maps..."
+                class="speed-input w-full rounded-lg px-4 py-3 text-sm"
+            >
+        </div>
+    </div>
 
-    <ul id="mapList" class="space-y-2 max-h-150 overflow-y-auto pr-2">
+    <div id="mapList" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         @forelse ($maps as $map)
-            <li class="bg-gray-800 p-4 rounded hover:bg-gray-700 transition">
-                <a href="{{ route('maps.show', $map->uuid) }}" class="text-indigo-300 hover:underline">
-                    {{ $map->name }}
-                </a>
-            </li>
+            @php
+                $mode = str_contains(strtolower($map->name), 'deathrun') ? 'Deathrun' : 'Bhop';
+            @endphp
+            <a
+                href="{{ route('maps.show', $map->uuid) }}"
+                class="map-card speed-card group rounded-lg p-4 transition"
+                data-map-name="{{ strtolower($map->name) }}"
+            >
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <h2 class="truncate text-base font-semibold text-white group-hover:text-amber-200">{{ $map->name }}</h2>
+                        <p class="speed-muted mt-2 truncate font-mono text-xs">{{ $map->uuid }}</p>
+                    </div>
+                    <span class="speed-pill shrink-0 rounded px-2 py-1 text-xs font-semibold">{{ $mode }}</span>
+                </div>
+            </a>
         @empty
-            <li class="text-gray-500">No maps found.</li>
+            <p class="text-slate-500">No maps found.</p>
         @endforelse
-    </ul>
+    </div>
+
+    <div id="emptyMaps" class="speed-panel hidden rounded-lg px-5 py-10 text-center text-slate-500">
+        No maps match your search.
+    </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('mapSearch');
-        const listItems = document.querySelectorAll('#mapList li');
+        const cards = document.querySelectorAll('.map-card');
+        const emptyState = document.getElementById('emptyMaps');
 
         input.addEventListener('input', () => {
-            const search = input.value.toLowerCase();
-            listItems.forEach(li => {
-                const text = li.textContent.toLowerCase();
-                li.style.display = text.includes(search) ? '' : 'none';
+            const search = input.value.trim().toLowerCase();
+            let visible = 0;
+
+            cards.forEach(card => {
+                const isMatch = card.dataset.mapName.includes(search);
+                card.classList.toggle('hidden', !isMatch);
+                visible += isMatch ? 1 : 0;
             });
+
+            emptyState.classList.toggle('hidden', visible !== 0);
         });
     });
 </script>

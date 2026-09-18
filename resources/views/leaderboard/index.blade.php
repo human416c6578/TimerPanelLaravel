@@ -16,87 +16,91 @@
 @endphp
 
 
-<div class="container mx-auto px-4 py-6 text-gray-300 bg-gray-900 rounded-lg shadow-lg">
-    <h1 class="text-4xl font-extrabold mb-6 text-indigo-400 drop-shadow-lg">Leaderboard</h1>
+<div class="space-y-6">
+    <div class="speed-panel rounded-lg p-6">
+        <p class="speed-eyebrow text-sm font-bold">Season standings</p>
+        <h1 class="mt-2 text-4xl font-black text-white">Leaderboard</h1>
+        <p class="speed-muted mt-2 text-sm">Compare server grinders by total playtime or ranked score.</p>
 
-    <!-- Toggle buttons -->
-    <div class="mb-6 flex space-x-4">
+    <div class="mt-6 flex flex-wrap gap-3">
         <button id="btnPlayedTime" 
-                class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 font-semibold shadow-md">
-            ⏱️ Played Time
+                class="speed-btn-primary px-5 py-2 text-sm">
+            Played Time
         </button>
         <button id="btnRanking" 
-                class="px-5 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 font-semibold shadow-md text-gray-400">
-            🏆 Ranking
+                class="speed-btn-secondary px-5 py-2 text-sm">
+            Ranking
         </button>
     </div>
+    </div>
 
-    <!-- Played Time Leaderboard -->
-    <div id="playedTimeBoard" class="rounded-lg border border-indigo-600 overflow-hidden shadow-md">
-        <h2 class="text-2xl font-semibold mb-4 text-indigo-300 px-4 py-2 bg-indigo-900 border-b border-indigo-600 drop-shadow-md">⏱️ Top Played Time</h2>
-        <table class="w-full text-left">
-            <thead class="bg-indigo-700 text-indigo-200 uppercase tracking-wider select-none">
+    <div id="playedTimeBoard" class="speed-panel overflow-hidden rounded-lg">
+        <div class="border-b border-cyan-400/10 px-5 py-4">
+            <h2 class="text-xl font-semibold text-white">Top Played Time</h2>
+            <p class="speed-muted text-sm">Most time spent routing and practicing.</p>
+        </div>
+        <table class="w-full text-left text-sm">
+            <thead class="speed-table-head uppercase tracking-wide">
                 <tr>
-                    <th class="px-5 py-3">🏅 Rank</th>
+                    <th class="px-5 py-3">Rank</th>
                     <th class="px-5 py-3">Player</th>
-                    <th class="px-5 py-3">Time Played (hours)</th>
+                    <th class="px-5 py-3">Time Played</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-800">
                 @forelse ($topPlayedTimes as $index => $record)
-                    <tr class="{{ $index % 2 === 0 ? 'bg-indigo-900/50' : 'bg-indigo-900/30' }} hover:bg-indigo-800 transition-colors duration-300">
-                        <td class="px-5 py-3 font-semibold text-indigo-400">
-                            {!! $index === 0 ? '🥇' : ($index === 1 ? '🥈' : ($index === 2 ? '🥉' : $index + 1)) !!}
+                    <tr class="speed-row transition">
+                        <td class="px-5 py-3 font-mono font-semibold text-amber-200">
+                            #{{ $index + 1 }}
                         </td>
-                        <td class="px-5 py-3 font-medium text-indigo-100">{{ $record->name }}</td>
-                        <td class="px-5 py-3">{{ formatTimePlayed($record->time_played) }}</td>
+                        <td class="px-5 py-3 font-medium text-white">{{ $record->name }}</td>
+                        <td class="px-5 py-3 font-mono text-cyan-100">{{ formatTimePlayed($record->time_played) }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-5 py-3 text-center text-gray-500">No records found.</td>
+                        <td colspan="3" class="px-5 py-8 text-center text-slate-500">No records found.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Ranking Leaderboard -->
-    <div id="rankingBoard" class="hidden rounded-lg border border-green-600 overflow-hidden shadow-md">
-    <h2 class="text-2xl font-semibold mb-4 text-green-400 px-4 py-2 bg-green-900 border-b border-green-600 drop-shadow-md">
-        🏆 Top Rankings (Score & Medals)
-    </h2>
-    <table class="w-full text-left">
-        <thead class="bg-green-700 text-green-200 uppercase tracking-wider select-none">
+    <div id="rankingBoard" class="speed-panel hidden overflow-hidden rounded-lg">
+    <div class="border-b border-cyan-400/10 px-5 py-4">
+        <h2 class="text-xl font-semibold text-white">Top Rankings</h2>
+        <p class="speed-muted text-sm">Score and medal totals from ranked completions.</p>
+    </div>
+    <table class="w-full text-left text-sm">
+        <thead class="speed-table-head uppercase tracking-wide">
             <tr>
-                <th class="px-5 py-3">🏅 Rank</th>
+                <th class="px-5 py-3">Rank</th>
                 <th class="px-5 py-3">Player</th>
                 <th class="px-5 py-3">Score</th>
-                <th class="px-5 py-3">🥉 Bronze</th>
-                <th class="px-5 py-3">🥈 Silver</th>
-                <th class="px-5 py-3">🥇 Gold</th>
+                <th class="px-5 py-3">Bronze</th>
+                <th class="px-5 py-3">Silver</th>
+                <th class="px-5 py-3">Gold</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-800">
             @forelse ($topRankings as $index => $ranking)
-                <tr class="{{ $index % 2 === 0 ? 'bg-green-900/50' : 'bg-green-900/30' }} hover:bg-green-800 transition-colors duration-300">
-                    <td class="px-5 py-3 font-semibold text-green-400">
-                        {!! $index === 0 ? '🏆' : ($index === 1 ? '🥈' : ($index === 2 ? '🥉' : $index + 1)) !!}
+                <tr class="speed-row transition">
+                    <td class="px-5 py-3 font-mono font-semibold text-amber-200">
+                        #{{ $index + 1 }}
                     </td>
-                    <td class="px-5 py-3 font-medium text-green-100">{{ $ranking->user->name ?? 'Unknown' }}</td>
-                    <td class="px-5 py-3">{{ $ranking->score }}</td>
+                    <td class="px-5 py-3 font-medium text-white">{{ $ranking->user->name ?? 'Unknown' }}</td>
+                    <td class="px-5 py-3 font-mono text-cyan-100">{{ $ranking->score }}</td>
                     <td class="px-5 py-3">{{ $ranking->bronze }}</td>
                     <td class="px-5 py-3">{{ $ranking->silver }}</td>
-                    <td class="px-5 py-3">{{ $ranking->gold }}</td>
+                    <td class="px-5 py-3 text-amber-200">{{ $ranking->gold }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="px-5 py-3 text-center text-gray-500">No rankings found.</td>
+                    <td colspan="6" class="px-5 py-8 text-center text-slate-500">No rankings found.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
-
 </div>
 
 <script>
@@ -109,19 +113,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function activatePlayedTime() {
         playedTimeBoard.classList.remove('hidden');
         rankingBoard.classList.add('hidden');
-        btnPlayedTime.classList.add('bg-indigo-600', 'text-white');
-        btnPlayedTime.classList.remove('bg-gray-700', 'text-gray-400');
-        btnRanking.classList.remove('bg-yellow-600', 'text-white');
-        btnRanking.classList.add('bg-gray-700', 'text-gray-400');
+        btnPlayedTime.classList.add('speed-btn-primary');
+        btnPlayedTime.classList.remove('speed-btn-secondary');
+        btnRanking.classList.add('speed-btn-secondary');
+        btnRanking.classList.remove('speed-btn-primary');
     }
 
     function activateRanking() {
         rankingBoard.classList.remove('hidden');
         playedTimeBoard.classList.add('hidden');
-        btnRanking.classList.add('bg-yellow-600', 'text-white');
-        btnRanking.classList.remove('bg-gray-700', 'text-gray-400');
-        btnPlayedTime.classList.remove('bg-indigo-600', 'text-white');
-        btnPlayedTime.classList.add('bg-gray-700', 'text-gray-400');
+        btnRanking.classList.add('speed-btn-primary');
+        btnRanking.classList.remove('speed-btn-secondary');
+        btnPlayedTime.classList.add('speed-btn-secondary');
+        btnPlayedTime.classList.remove('speed-btn-primary');
     }
 
     btnPlayedTime.addEventListener('click', activatePlayedTime);

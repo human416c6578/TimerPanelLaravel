@@ -7,6 +7,7 @@ use App\Http\Controllers\MapController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\TimeController;
 use App\Http\Controllers\ReplayController;
+use App\Http\Controllers\DashboardController;
 
 
 Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
@@ -23,15 +24,24 @@ Route::delete('/maps/{uuid}/time', [MapController::class, 'deleteMapRankedTime']
 Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
 Route::get('/proxy', [App\Http\Controllers\ProxyController::class, 'fetch']);
+Route::get('/replays', [ReplayController::class, 'index'])->name('replays.index');
 Route::get('/replays/{map}/{category}', [ReplayController::class, 'show'])->name('replays.show');
 
 Route::get('/', [TimeController::class, 'index'])->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
 Route::middleware(['auth'])->group(function () {
+    Route::get('dashboard', [DashboardController::class, 'index'])
+        ->middleware(['verified'])
+        ->name('dashboard');
+
+    Route::post('dashboard/leaderboards/refresh', [DashboardController::class, 'refreshLeaderboards'])
+        ->middleware(['verified'])
+        ->name('dashboard.leaderboards.refresh');
+
+    Route::post('dashboard/cache/clear', [DashboardController::class, 'clearCaches'])
+        ->middleware(['verified'])
+        ->name('dashboard.cache.clear');
+
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('settings.profile');

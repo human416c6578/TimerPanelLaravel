@@ -1,5 +1,5 @@
-<div class="bg-gray-900 p-6 rounded-lg shadow-lg text-white">
-    <select id="rangeSelector" style="margin-bottom: 1rem;">
+<div class="speed-panel p-6 rounded-lg text-white">
+    <select id="rangeSelector" class="speed-input mb-4 rounded px-3 py-2 text-sm">
         <option value="7">Last 7 Days</option>
         <option value="30" selected>Last 30 Days</option>
     </select>
@@ -17,8 +17,8 @@
 
     function getStackColor(stack) {
         const colors = [
-            '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6',
-            '#ec4899', '#14b8a6', '#84cc16', '#eab308'
+            '#22d3ee', '#f59e0b', '#ef4444', '#10b981', '#38bdf8', '#f97316',
+            '#eab308', '#14b8a6', '#84cc16', '#f43f5e'
         ];
         let index = [...new Set(originalData.datasets.map(d => d.stack))].indexOf(stack);
         return colors[index % colors.length];
@@ -83,7 +83,7 @@
                         display: true,
                         labels: {
                             font: { size: 18 },
-                            color: '#6366f1',
+                            color: '#67e8f9',
                             generateLabels: (chart) => {
                                 const labels = [];
                                 const stacks = [...new Set(chart.data.datasets.map(ds => ds.stack))];
