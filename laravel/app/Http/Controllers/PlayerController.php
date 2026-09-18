@@ -210,8 +210,7 @@ class PlayerController extends Controller
         $filePaths = [];
 
         foreach ($rank1Times as $time) {
-            // Adjust path depending on how files are stored
-            $filePath = "/home/csgfxeu/public_html/uploads/recording/{$time->MapName}/[{$time->CategoryName}].rec";
+            $filePath = config('replays.path')."/{$time->MapName}/[{$time->CategoryName}].rec";
 
             if (file_exists($filePath)) {
                 $filePaths[] = $filePath;

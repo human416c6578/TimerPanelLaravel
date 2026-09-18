@@ -92,7 +92,7 @@ class MapController extends Controller
         if ($request->input('rank') == 1) {
             $map = Map::findOrFail($uuid);
             $categoryName = $request->input('category_name');
-            $filePath = "/home/csgfxeu/public_html/uploads/recording/{$map->name}/[{$categoryName}].rec";
+            $filePath = config('replays.path')."/{$map->name}/[{$categoryName}].rec";
 
             if (file_exists($filePath)) {
                 unlink($filePath);

@@ -77,15 +77,16 @@
 
 <script>
     window.addEventListener('load', async () => {
-        const urlBhop = "http://fastdl.cs-gfx.eu/7c1cc7a5-03d1-4475-93d5-abab1847c0f2/cstrike/";
-        const urlDr = "http://fastdl.cs-gfx.eu/0d3d0661-5f4e-45c2-acbc-000eeeccb067/cstrike/";
+        const urlBhop = @json(config('replays.fastdl.bhop'));
+        const urlDr = @json(config('replays.fastdl.deathrun'));
+        const downloadUrl = @json(rtrim(config('replays.download_url'), '/'));
         const mapName = @json($mapName);
         const categoryName = @json($categoryName);
         const resourceUrl = mapName.includes("deathrun") ? urlDr : urlBhop;
 
         const paths = {
             base: `/proxy?url=${resourceUrl}`,
-            replays: '/proxy?url=https://cs-gfx.eu/uploads/recording',
+            replays: `/proxy?url=${downloadUrl}`,
             maps: `/proxy?url=${resourceUrl}maps`,
             wads: `/proxy?url=${resourceUrl}`,
             skies: `/proxy?url=${resourceUrl}gfx/env`,
@@ -98,7 +99,7 @@
 
         document.getElementById("downloadBtn").addEventListener("click", () => {
             const link = document.createElement("a");
-            link.href = `https://cs-gfx.eu/uploads/recording/${mapName}/[${categoryName}].rec`;
+            link.href = `${downloadUrl}/${mapName}/[${categoryName}].rec`;
             link.download = `${mapName} - [${categoryName}].rec`;
             link.click();
             link.remove();
