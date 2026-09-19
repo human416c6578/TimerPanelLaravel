@@ -1,0 +1,22 @@
+{
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp
+	auto_https off
+	admin off
+}
+
+{$SERVER_NAME::8080} {
+	root /app/public
+	encode zstd br gzip
+
+	# Laravel's health endpoint, kept out of the access log.
+	log {
+		output stderr
+		format console
+	}
+
+	php_server {
+		try_files {path} index.php
+	}
+}

@@ -1,0 +1,81 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build image, lint and test inside it
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: test
+          load: true
+          tags: timerpanel:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pint
+        run: docker run --rm timerpanel:test vendor/bin/pint --test
+
+      - name: Pest
+        # Tests that need the external game database skip themselves; the rest
+        # run against sqlite :memory: (laravel/phpunit.xml).
+        run: docker run --rm timerpanel:test vendor/bin/pest
+
+      - name: Build production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: production
+          load: true
+          tags: timerpanel:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Boot the production image
+        run: |
+          docker run -d --name timerpanel-smoke -p 8080:8080 \
+            -e APP_KEY="base64:$(openssl rand -base64 32)" \
+            -e APP_URL=http://localhost:8080 \
+            timerpanel:ci
+
+      - name: Wait for the health endpoint
+        run: |
+          for i in $(seq 1 30); do
+            status=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/up || true)
+            if [ "$status" = "200" ]; then
+              echo "healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::the container never became healthy"
+          docker logs timerpanel-smoke
+          exit 1
+
+      - name: Container logs
+        if: failure()
+        run: docker logs timerpanel-smoke || true
+
+      - name: Stop the container
+        if: always()
+        run: docker rm -f timerpanel-smoke || true
