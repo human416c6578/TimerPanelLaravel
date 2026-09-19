@@ -57,21 +57,37 @@ class RunController extends Controller
 
         abort_if($run === null, 404);
 
-        // The two runs either side, so the page shows what it took to get here
-        // and what is next.
-        $neighbours = Cache::remember(
-            "run_neighbours_{$mapUuid}_{$categoryId}_{$run->rank}",
-            now()->addMinutes(2),
-            fn () => DB::connection('game_mysql')
-                ->table('ranked_times as rt')
-                ->join('users as u', 'u.uuid', '=', 'rt.user_uuid')
-                ->where('rt.map_uuid', $mapUuid)
-                ->where('rt.category_id', $categoryId)
-                ->whereBetween('rt.rank', [max(1, $run->rank - 2), $run->rank + 2])
-                ->orderBy('rt.rank')
-                ->select(['rt.rank', 'rt.time', 'u.uuid as user_uuid', 'u.name as user_name'])
-                ->get()
-        );
+        // The runs either side of this one. The cached board already carries their
+        // stats, so use it whenever this run is on it (the top 50); only a run
+        // further down needs a query, and then there are no stats to show.
+        $board = $boards->for($mapUuid)->get($categoryId, collect());
+        $onBoard = $board->contains(fn ($row) => $row->UserUUID === $userUuid);
+
+        $window = $onBoard
+            ? $board->filter(fn ($row) => abs((int) $row->Rank - (int) $run->rank) <= 3)->values()
+            : Cache::remember(
+                "run_neighbours_{$mapUuid}_{$categoryId}_{$run->rank}",
+                now()->addMinutes(2),
+                fn () => DB::connection('game_mysql')
+                    ->table('ranked_times as rt')
+                    ->join('users as u', 'u.uuid', '=', 'rt.user_uuid')
+                    ->where('rt.map_uuid', $mapUuid)
+                    ->where('rt.category_id', $categoryId)
+                    ->whereBetween('rt.rank', [max(1, $run->rank - 3), $run->rank + 3])
+                    ->orderBy('rt.rank')
+                    ->select(['rt.rank', 'rt.time', 'u.uuid as user_uuid', 'u.name as user_name'])
+                    ->get()
+                    // Same shape as a board row, minus the stats the timer keeps elsewhere.
+                    ->map(fn ($row) => (object) [
+                        'Rank' => $row->rank,
+                        'time' => $row->time,
+                        'UserUUID' => $row->user_uuid,
+                        'UserName' => $row->user_name,
+                        'Delta' => $run->best_time !== null ? (int) $row->time - (int) $run->best_time : null,
+                        'sync' => null, 'strafes' => null, 'jumps' => null, 'start_speed' => null, 'overlaps' => null,
+                        'nationality' => null,
+                    ])
+            );
 
         $totalRuns = Cache::remember(
             "run_count_{$mapUuid}_{$categoryId}",
@@ -99,7 +115,7 @@ class RunController extends Controller
             'categoryId' => $categoryId,
             'categoryName' => $category->name ?? 'Unknown',
             'chips' => $rules->chips($categoryId),
-            'neighbours' => $neighbours,
+            'window' => $window,
             'totalRuns' => $totalRuns,
             'records' => $records,
             // Only the record holder has a recording on disk.

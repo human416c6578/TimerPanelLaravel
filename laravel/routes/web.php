@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\PlayerVersusController;
 use App\Http\Controllers\ReplayController;
 use App\Http\Controllers\RunController;
 use App\Http\Controllers\TimeController;
@@ -12,6 +13,7 @@ use Livewire\Volt\Volt;
 
 Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
 Route::get('/players/{uuid}', [PlayerController::class, 'profile'])->name('players.show');
+Route::get('/players/{a}/vs/{b}', [PlayerVersusController::class, 'show'])->name('players.versus');
 Route::delete('/players/{uuid}/times', [PlayerController::class, 'deleteUserRankedTimes'])
     ->name('players.delete.times');
 

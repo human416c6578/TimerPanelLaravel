@@ -69,6 +69,7 @@ class PlayerController extends Controller
         $rankSummary = $profile->rankSummary($allRuns);
         $withinReach = $profile->withinReach($allRuns);
         $medals = $profile->medals($uuid);
+        $insights = $profile->insights($allRuns);
 
         return view(
             'player.profile',
@@ -80,7 +81,8 @@ class PlayerController extends Controller
                 'chartData',
                 'rankSummary',
                 'withinReach',
-                'medals'
+                'medals',
+                'insights'
             )
         );
     }

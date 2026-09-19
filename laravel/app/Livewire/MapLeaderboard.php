@@ -35,7 +35,17 @@ class MapLeaderboard extends Component
     #[Url(except: false)]
     public bool $all = false;
 
-    /** @var array<int, string> user uuids, at most two */
+    /** Which columns to show: the headline ones, or the movement stats. */
+    #[Url(except: 'summary')]
+    public string $view = 'summary';
+
+    /**
+     * Uuids of the runs being compared, at most two. Kept in the URL, so a
+     * head-to-head can be sent to someone as a link.
+     *
+     * @var array<int, string>
+     */
+    #[Url(as: 'vs', except: [])]
     public array $compare = [];
 
     /** Sortable column => property on the run object. */
@@ -45,6 +55,7 @@ class MapLeaderboard extends Component
         'sync' => 'sync',
         'strafes' => 'strafes',
         'jumps' => 'jumps',
+        'overlaps' => 'overlaps',
         'speed' => 'start_speed',
         'date' => 'record_date',
     ];
@@ -75,6 +86,23 @@ class MapLeaderboard extends Component
             ? ($this->direction === 'asc' ? 'desc' : 'asc')
             : (in_array($column, ['sync', 'speed', 'jumps', 'date'], true) ? 'desc' : 'asc');
         $this->sort = $column;
+    }
+
+    public function setView(string $view): void
+    {
+        $this->view = in_array($view, ['summary', 'movement'], true) ? $view : 'summary';
+    }
+
+    /** One click: this run against the record on the same category. */
+    public function compareWithRecord(string $userUuid): void
+    {
+        $record = $this->record;
+
+        if ($record === null || $record->UserUUID === $userUuid) {
+            return;
+        }
+
+        $this->compare = [$record->UserUUID, $userUuid];
     }
 
     public function toggleCompare(string $userUuid): void
@@ -164,6 +192,31 @@ class MapLeaderboard extends Component
     public function record(): ?object
     {
         return $this->boards->get($this->currentCategory, collect())->firstWhere('Rank', 1);
+    }
+
+    /**
+     * The best value of each stat on this category, so its cell can be boxed.
+     * Only stats where one direction is unambiguously better: more sync and a
+     * higher start speed, fewer overlaps.
+     *
+     * @return array<string, float|int>
+     */
+    #[Computed]
+    public function bests(): array
+    {
+        $runs = $this->boards->get($this->currentCategory, collect());
+
+        $best = fn (string $property, string $direction) => $runs
+            ->pluck($property)
+            ->filter(fn ($value) => $value !== null)
+            ->{$direction === 'max' ? 'max' : 'min'}();
+
+        return array_filter([
+            'sync' => $best('sync', 'max'),
+            'start_speed' => $best('start_speed', 'max'),
+            'overlaps' => $best('overlaps', 'min'),
+            'overlaps_sd' => $best('overlaps_sd', 'min'),
+        ], fn ($value) => $value !== null);
     }
 
     /** @return array<int, array{label: string, value: string}> */

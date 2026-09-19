@@ -98,12 +98,52 @@ test('picking a run twice removes it from the comparison', function () {
         ->assertSet('compare', []);
 });
 
-test('two picked runs open the head to head', function () {
+test('two picked runs open the head to head with the gap between them', function () {
     leaderboard()
         ->call('toggleCompare', 'u1')
         ->call('toggleCompare', 'u2')
         ->assertSee('Head to head')
-        ->assertSee('+5.000');
+        ->assertSee('5.000');
+});
+
+test('vs WR pits a run against the record in one call', function () {
+    leaderboard()
+        ->call('compareWithRecord', 'u3')
+        ->assertSet('compare', ['u1', 'u3']);
+});
+
+test('the record holder cannot be compared with themselves', function () {
+    leaderboard()
+        ->call('compareWithRecord', 'u1')
+        ->assertSet('compare', []);
+});
+
+test('the comparison is kept in the address so it can be shared', function () {
+    Livewire::withQueryParams(['vs' => ['u1', 'u2']])
+        ->test(MapLeaderboard::class, ['mapUuid' => 'map-1', 'mapName' => 'bhop_test'])
+        ->assertSet('compare', ['u1', 'u2'])
+        ->assertSee('Head to head');
+});
+
+test('the movement view shows the columns the summary hides', function () {
+    leaderboard()
+        ->assertDontSee('Overlaps')
+        ->call('setView', 'movement')
+        ->assertSee('Overlaps')
+        ->assertSee('Strafes');
+});
+
+test('an unknown view falls back to the summary', function () {
+    leaderboard()
+        ->call('setView', 'nonsense')
+        ->assertSet('view', 'summary');
+});
+
+test('the best sync on the category is boxed', function () {
+    // Bravo has 92.5, the best in the fixture; Alpha's 80.0 is not.
+    leaderboard()
+        ->assertSeeHtml('title="Best on this category">92.5%')
+        ->assertDontSeeHtml('title="Best on this category">80.0%');
 });
 
 test('the map cannot be changed from the browser', function () {

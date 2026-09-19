@@ -122,6 +122,28 @@ class TimeController extends Controller
             ->take(3)
             ->values();
 
-        return view('welcome', compact('latestTimes', 'homeStats', 'servers', 'recordHolders'));
+        $feed = collect($latestTimes);
+
+        // The headline of the day: the newest record, or failing that the newest run.
+        $spotlight = $feed->firstWhere('rank', 1) ?? $feed->first();
+
+        // Maps with the most runs in the window.
+        $hotMaps = $feed
+            ->groupBy('map_uuid')
+            ->map(fn ($runs) => (object) ['uuid' => $runs->first()->map_uuid, 'name' => $runs->first()->map_name, 'runs' => $runs->count()])
+            ->sortByDesc('runs')
+            ->take(5)
+            ->values();
+
+        // Runs within 2% of the record without taking it: the ones worth watching.
+        $closeCalls = $feed
+            ->filter(fn ($run) => (int) $run->rank > 1
+                && $run->best_time !== null
+                && ((int) $run->time - (int) $run->best_time) / max(1, (int) $run->best_time) <= 0.02)
+            ->sortBy(fn ($run) => (int) $run->time - (int) $run->best_time)
+            ->take(5)
+            ->values();
+
+        return view('welcome', compact('latestTimes', 'homeStats', 'servers', 'recordHolders', 'spotlight', 'hotMaps', 'closeCalls'));
     }
 }

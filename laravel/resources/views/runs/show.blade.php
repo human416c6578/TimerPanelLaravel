@@ -2,176 +2,233 @@
 
 @php
     $rank = (int) $run->rank;
-    $delta = $run->best_time !== null ? (int) $run->time - (int) $run->best_time : null;
     $isRecord = $rank === 1;
-    $stat = fn ($value, $decimals = 0, $suffix = '') => $value === null ? '—' : number_format((float) $value, $decimals).$suffix;
+    $delta = $run->best_time !== null ? (int) $run->time - (int) $run->best_time : null;
+    $topPercent = $totalRuns >= 10 ? max(1, (int) ceil($rank / $totalRuns * 100)) : null;
 
+    // Who this run is measured against: the record, or for the record itself,
+    // the run that is chasing it.
+    $rival = $isRecord
+        ? $window->first(fn ($row) => (int) $row->Rank === 2)
+        : $window->first(fn ($row) => (int) $row->Rank === 1) ?? $records->firstWhere('CategoryId', $categoryId);
+
+    $rivalGap = $rival ? (int) $rival->time - (int) $run->time : null;
+
+    $best = fn (string $property, string $direction) => $window
+        ->pluck($property)->filter(fn ($value) => $value !== null)
+        ->pipe(fn ($values) => $values->isEmpty() ? null : ($direction === 'max' ? $values->max() : $values->min()));
+    $bests = ['sync' => $best('sync', 'max'), 'start_speed' => $best('start_speed', 'max'), 'overlaps' => $best('overlaps', 'min')];
+
+    $stat = fn ($value, $decimals = 0, $suffix = '') => $value === null ? '—' : number_format((float) $value, $decimals).$suffix;
     $tiles = [
-        ['icon' => 'gauge', 'label' => 'Sync', 'value' => $stat($run->sync, 1, '%')],
-        ['icon' => 'zap', 'label' => 'Start speed', 'value' => $stat($run->start_speed)],
-        ['icon' => 'flame', 'label' => 'Jumps', 'value' => $stat($run->jumps)],
-        ['icon' => 'target', 'label' => 'Strafes', 'value' => $stat($run->strafes)],
-        ['icon' => 'compare', 'label' => 'Overlaps', 'value' => $stat($run->overlaps).($run->overlaps_sd !== null ? ' ±'.number_format((float) $run->overlaps_sd, 2) : '')],
+        ['gauge', 'Sync', $stat($run->sync, 1, '%')],
+        ['zap', 'Start speed', $stat($run->start_speed)],
+        ['flame', 'Jumps', $stat($run->jumps)],
+        ['target', 'Strafes', $stat($run->strafes)],
+        ['compare', 'Overlaps', $stat($run->overlaps).($run->overlaps_sd !== null ? ' ±'.number_format((float) $run->overlaps_sd, 2) : '')],
     ];
 @endphp
 
 <x-layouts.app :title="$map->name.' · '.$categoryName">
-    <div class="space-y-2">
+    <div class="space-y-3" x-data="{ tab: 'scoreboard' }">
         <x-ui.breadcrumb :trail="[
             'Maps' => route('maps.index'),
-            $map->name => route('maps.show', $map->uuid),
+            $map->name => route('maps.show', $map->uuid).'?category='.$categoryId,
             $categoryName => null,
         ]" />
 
-        {{-- The run --}}
-        <section class="panel bracket">
-            <div class="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                <div class="min-w-0">
-                    <p class="hud-label"><x-icon name="timer" class="size-3.5" /> Run</p>
+        {{-- The duel --}}
+        <section class="panel panel-flush">
+            <x-cover :name="$map->name">
+                <div class="px-5 pt-4 sm:px-7">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{{ route('maps.show', $map->uuid) }}?category={{ $categoryId }}" class="text-[13px] font-bold text-white hover:underline">{{ $map->name }}</a>
+                        <span class="rounded-full bg-white/15 px-2.5 py-0.5 text-[12px] font-semibold text-white">{{ $categoryName }}</span>
+                        <span class="text-[12px] text-white/60">{{ $run->record_date }}</span>
+                    </div>
+                </div>
 
-                    <p class="time-hero mt-2 {{ $isRecord ? 'text-gold' : '' }}">{{ TimeFormat::runtime($run->time) }}</p>
+                <div class="grid items-center gap-5 px-5 pb-6 pt-5 sm:px-7 md:grid-cols-[1fr_auto_1fr]">
+                    {{-- This run --}}
+                    <div class="min-w-0">
+                        <p class="flex items-center gap-2 text-[15px] font-bold text-white">
+                            <x-flag :code="$user->nationality" />
+                            <a href="{{ route('players.show', $user->uuid) }}" class="truncate hover:underline">{{ $user->name }}</a>
+                        </p>
+                        <p class="hero-figure mt-2 !text-white">{{ TimeFormat::runtime($run->time) }}</p>
+                        <p class="mt-3 flex flex-wrap items-center gap-2">
+                            @if ($isRecord)
+                                <span class="rank rank-1"><x-icon name="crown" class="size-3" /> World record</span>
+                            @else
+                                <span class="rank !bg-white/15 !text-white">#{{ $rank }}</span>
+                            @endif
 
-                    <div class="mt-3 flex flex-wrap items-center gap-2">
-                        @if ($isRecord)
-                            <span class="rank rank-1"><x-icon name="crown" class="size-3" /> World record</span>
-                        @else
-                            <x-ui.rank :rank="$rank" />
-                            <span class="text-[12px] text-subtle">of {{ number_format($totalRuns) }}</span>
-                        @endif
-
-                        @if ($delta !== null && $delta > 0)
-                            <span class="delta">{{ TimeFormat::delta($delta) }} from the record</span>
-                        @endif
+                            @if ($topPercent !== null)
+                                <span class="text-[12px] text-white/70">top {{ $topPercent }}% of {{ number_format($totalRuns) }}</span>
+                            @endif
+                        </p>
                     </div>
 
-                    <p class="mt-3 flex flex-wrap items-center gap-2 text-[13px]">
-                        <x-flag :code="$user->nationality" />
-                        <a href="{{ route('players.show', $user->uuid) }}" class="link">{{ $user->name }}</a>
-                        <span class="text-subtle">on</span>
-                        <a href="{{ route('maps.show', $map->uuid) }}" class="text-ink hover:text-accent">{{ $map->name }}</a>
-                        <x-ui.pill accent>{{ $categoryName }}</x-ui.pill>
-                    </p>
+                    {{-- The gap --}}
+                    <div class="text-center">
+                        <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/60">{{ $isRecord ? 'lead' : 'vs WR' }}</p>
+                        <p class="mt-1 font-mono text-2xl font-bold text-white">
+                            @if ($isRecord)
+                                {{ $rivalGap !== null ? '+'.number_format($rivalGap / 1000, 3) : '—' }}
+                            @else
+                                {{ $delta !== null ? TimeFormat::delta($delta) : '—' }}
+                            @endif
+                        </p>
+                    </div>
 
-                    <p class="mt-1 font-mono text-[11px] text-subtle">{{ $run->record_date }}</p>
-                </div>
+                    {{-- The rival --}}
+                    <div class="min-w-0 md:text-right">
+                        @if ($rival)
+                            @php($rivalName = $rival->UserName)
+                            @php($rivalUuid = $rival->UserUUID)
 
-                <div class="flex flex-wrap gap-2 lg:flex-col">
-                    @if ($hasReplay)
-                        <button type="button" id="downloadBtn" class="btn btn-primary"><x-icon name="download" /> Download replay</button>
-                    @elseif ($run->best_user_uuid)
-                        <a href="{{ route('runs.show', [$map->uuid, $categoryId, $run->best_user_uuid]) }}" class="btn">
-                            <x-icon name="play" /> Watch the record
-                        </a>
-                    @endif
+                            <p class="truncate text-[15px] font-bold text-white md:justify-end">
+                                <a href="{{ route('players.show', $rivalUuid) }}" class="hover:underline">{{ $rivalName }}</a>
+                            </p>
+                            <p class="big-figure mt-2 !text-white/85">{{ TimeFormat::runtime($rival->time) }}</p>
+                            <p class="mt-3 text-[12px] text-white/70">
+                                {{ $isRecord ? 'runner-up' : 'world record' }} ·
+                                <a href="{{ route('runs.show', [$map->uuid, $categoryId, $rivalUuid]) }}" class="font-semibold text-white hover:underline">open run</a>
+                            </p>
+                        @else
+                            <p class="text-[13px] text-white/60">Nobody else has run this yet.</p>
+                        @endif
+                    </div>
                 </div>
-            </div>
+            </x-cover>
 
             @if (count($chips))
-                <div class="flex flex-wrap items-center gap-1.5 border-t border-line px-3 py-2">
-                    <span class="me-1 text-[11px] uppercase tracking-widest text-subtle">Ruleset</span>
+                <div class="flex flex-wrap items-center gap-1.5 px-4 py-2.5">
+                    <span class="me-1 text-[11px] font-bold uppercase tracking-widest text-subtle">Ruleset</span>
                     @foreach ($chips as $chip)
                         <dl class="rule"><dt>{{ $chip['label'] }}</dt><dd>{{ $chip['value'] }}</dd></dl>
                     @endforeach
                 </div>
             @endif
+
+            <div class="tabs px-2">
+                <button type="button" class="tab" :class="tab === 'scoreboard' && 'is-active'" x-on:click="tab = 'scoreboard'">Scoreboard</button>
+                <button type="button" class="tab" :class="tab === 'stats' && 'is-active'" x-on:click="tab = 'stats'">Run stats</button>
+                @if ($hasReplay)
+                    <button type="button" class="tab" :class="tab === 'replay' && 'is-active'" x-on:click="tab = 'replay'"><x-icon name="play" class="size-3.5" /> Replay</button>
+                @endif
+                <button type="button" class="tab" :class="tab === 'records' && 'is-active'" x-on:click="tab = 'records'">Other categories</button>
+            </div>
         </section>
 
-        {{-- What the timer recorded --}}
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            @foreach ($tiles as $tile)
-                <div class="panel px-3 py-2.5">
-                    <p class="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-subtle">
-                        <x-icon :name="$tile['icon']" class="size-3.5" /> {{ $tile['label'] }}
-                    </p>
-                    <p @class(['mt-1 font-mono text-lg tabular', 'text-ink' => $tile['value'] !== '—', 'text-subtle' => $tile['value'] === '—'])>{{ $tile['value'] }}</p>
-                </div>
-            @endforeach
-        </div>
+        {{-- Scoreboard: the run and the ones around it --}}
+        <section x-show="tab === 'scoreboard'" class="panel panel-flush">
+            <x-ui.table min="560px">
+                <thead>
+                    <tr>
+                        <th class="w-16">#</th>
+                        <th>Player</th>
+                        <th class="text-right">Time</th>
+                        <th class="text-right">Gap</th>
+                        <th class="text-right">Sync</th>
+                        <th class="hidden text-right sm:table-cell">Strafes</th>
+                        <th class="hidden text-right sm:table-cell">Jumps</th>
+                        <th class="hidden text-right md:table-cell">Start</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($window as $near)
+                        @php($mine = $near->UserUUID === $user->uuid)
 
-        @if ($run->sync === null && $run->strafes === null && $run->jumps === null)
-            <p class="px-1 text-[11px] text-subtle">The timer did not record run statistics for this run — it predates them.</p>
-        @endif
+                        <tr @class(['is-record' => (int) $near->Rank === 1, 'is-mine' => $mine])>
+                            <td><x-ui.rank :rank="$near->Rank" /></td>
+                            <td>
+                                <a href="{{ route('runs.show', [$map->uuid, $categoryId, $near->UserUUID]) }}" @class(['link', 'text-accent' => $mine])>{{ $near->UserName }}</a>
+                                @if ($mine)<span class="ms-1 text-[10px] font-bold uppercase tracking-wider text-accent">this run</span>@endif
+                            </td>
+                            <td class="time time-lg text-right">{{ TimeFormat::runtime($near->time) }}</td>
+                            <td @class(['delta text-right', 'delta-record' => (int) $near->Rank === 1])>{{ TimeFormat::delta($near->Delta) }}</td>
+                            <td class="text-right"><x-ui.stat-cell :value="$near->sync" :best="$bests['sync']" :decimals="1" suffix="%" /></td>
+                            <td class="hidden text-right sm:table-cell"><x-ui.stat-cell :value="$near->strafes" /></td>
+                            <td class="hidden text-right sm:table-cell"><x-ui.stat-cell :value="$near->jumps" /></td>
+                            <td class="hidden text-right md:table-cell"><x-ui.stat-cell :value="$near->start_speed" :best="$bests['start_speed']" /></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </x-ui.table>
 
-        <div class="grid gap-2 lg:grid-cols-[minmax(0,1fr)_16rem]">
-            <div class="space-y-2">
-                {{-- The replay --}}
-                @if ($hasReplay)
-                    <x-ui.panel flush>
-                        <header class="panel-header">
-                            <p class="hud-label"><x-icon name="play" class="size-3.5" /> Replay</p>
-                            <p class="font-mono text-[11px] text-subtle">{{ $map->name }} · {{ $categoryName }}</p>
-                        </header>
+            <div class="flex items-center justify-between border-t border-line px-4 py-2.5 text-[12px]">
+                <span class="text-subtle">Boxed cells lead among these runs.</span>
+                <a href="{{ route('maps.show', $map->uuid) }}?category={{ $categoryId }}&vs[0]={{ $rival->UserUUID ?? '' }}&vs[1]={{ $user->uuid }}"
+                   @class(['btn btn-sm', 'hidden' => ! $rival])>
+                    <x-icon name="compare" class="size-3.5" /> Compare head to head
+                </a>
+            </div>
+        </section>
 
-                        <div class="bg-black p-2">
-                            <div id="hlv-target" class="h-[380px] overflow-hidden rounded-sm sm:h-[480px]"></div>
-                        </div>
-                    </x-ui.panel>
-                @endif
-
-                {{-- Where this run sits --}}
-                <x-ui.panel flush>
-                    <header class="panel-header">
-                        <p class="hud-label"><x-icon name="bar-chart" class="size-3.5" /> Standing</p>
-                        <a href="{{ route('maps.show', $map->uuid) }}?category={{ $categoryId }}" class="text-[11px] text-muted hover:text-accent">Full board &raquo;</a>
-                    </header>
-
-                    <x-ui.table min="420px">
-                        <thead>
-                            <tr>
-                                <th class="w-16">#</th>
-                                <th>Player</th>
-                                <th class="text-right">Time</th>
-                                <th class="text-right">Gap</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($neighbours as $near)
-                                @php($mine = $near->user_uuid === $user->uuid)
-
-                                <tr @class(['is-record' => (int) $near->rank === 1, 'bg-accent-soft' => $mine])>
-                                    <td><x-ui.rank :rank="$near->rank" /></td>
-                                    <td>
-                                        <a href="{{ route('runs.show', [$map->uuid, $categoryId, $near->user_uuid]) }}"
-                                           @class(['link', 'font-bold' => $mine])>{{ $near->user_name }}</a>
-                                    </td>
-                                    <td class="time text-right">{{ TimeFormat::runtime($near->time) }}</td>
-                                    <td @class(['delta text-right', 'delta-record' => (int) $near->rank === 1])>
-                                        {{ TimeFormat::delta($run->best_time !== null ? (int) $near->time - (int) $run->best_time : null) }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </x-ui.table>
-                </x-ui.panel>
+        {{-- Run stats --}}
+        <section x-show="tab === 'stats'" x-cloak class="space-y-3">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                @foreach ($tiles as [$icon, $label, $value])
+                    <div class="panel p-4">
+                        <p class="hud-label"><x-icon :name="$icon" class="size-3.5" /> {{ $label }}</p>
+                        <p @class(['big-figure mt-2', 'text-subtle' => $value === '—'])>{{ $value }}</p>
+                    </div>
+                @endforeach
             </div>
 
-            {{-- The rest of the map --}}
-            <x-ui.panel flush>
-                <header class="panel-header"><p class="hud-label"><x-icon name="trophy" class="size-3.5" /> Records here</p></header>
+            @if ($run->sync === null && $run->strafes === null && $run->jumps === null)
+                <p class="text-[12px] text-subtle">The timer did not record statistics for this run; it predates them.</p>
+            @endif
+        </section>
 
-                <div class="flex flex-col">
-                    @forelse ($records as $record)
-                        <a href="{{ route('runs.show', [$map->uuid, $record->CategoryId, $record->UserUUID]) }}"
-                           @class(['side-link !items-start !justify-between', 'is-active' => (int) $record->CategoryId === $categoryId])>
-                            <span class="min-w-0">
-                                <span class="block truncate">{{ $record->CategoryName }}</span>
-                                <span class="block truncate text-[11px] text-subtle">{{ $record->UserName }}</span>
-                            </span>
-                            <span class="time shrink-0 text-[11px] text-gold">{{ TimeFormat::runtime($record->time) }}</span>
-                        </a>
-                    @empty
-                        <p class="px-3 py-4 text-center text-[11px] text-subtle">No records on this map yet.</p>
-                    @endforelse
+        @if ($hasReplay)
+            <section x-show="tab === 'replay'" x-cloak class="panel panel-flush">
+                <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+                    <p class="hud-label"><x-icon name="play" class="size-3.5" /> Replay · {{ $map->name }} · {{ $categoryName }}</p>
+                    <button type="button" id="downloadBtn" class="btn btn-sm"><x-icon name="download" class="size-3.5" /> Download .rec</button>
                 </div>
-            </x-ui.panel>
-        </div>
+
+                <div class="bg-black p-2">
+                    <div id="hlv-target" class="h-[380px] overflow-hidden rounded-md sm:h-[500px]"></div>
+                </div>
+            </section>
+        @endif
+
+        {{-- The record on every category of this map --}}
+        <section x-show="tab === 'records'" x-cloak class="panel panel-flush">
+            <div class="divide-y divide-line">
+                @forelse ($records as $record)
+                    <a href="{{ route('runs.show', [$map->uuid, $record->CategoryId, $record->UserUUID]) }}"
+                       @class(['flex items-center gap-3 px-4 py-3 hover:bg-accent-soft', 'bg-accent-soft' => (int) $record->CategoryId === $categoryId])>
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-semibold">{{ $record->CategoryName }}</span>
+                            <span class="block text-[12px] text-muted">{{ $record->UserName }}</span>
+                        </span>
+                        <span class="time time-lg">{{ TimeFormat::runtime($record->time) }}</span>
+                        <x-icon name="crown" class="size-4 text-gold" />
+                    </a>
+                @empty
+                    <p class="px-4 py-8 text-center text-[12px] text-subtle">No records on this map yet.</p>
+                @endforelse
+            </div>
+        </section>
     </div>
 
     @if ($hasReplay)
         @push('scripts')
             <script src="{{ asset('js/hlviewer.min.js') }}"></script>
             <script>
-                window.addEventListener('load', async () => {
+                // The viewer needs a visible container, so it starts the first time the Replay tab opens.
+                let replayStarted = false;
+
+                const startReplay = async () => {
+                    if (replayStarted) {
+                        return;
+                    }
+
+                    replayStarted = true;
+
                     const urlBhop = @json(config('replays.fastdl.bhop'));
                     const urlDr = @json(config('replays.fastdl.deathrun'));
                     const downloadUrl = @json(rtrim(config('replays.download_url'), '/'));
@@ -199,6 +256,17 @@
                         link.click();
                         link.remove();
                     });
+                };
+
+                window.addEventListener('load', () => {
+                    const target = document.getElementById('hlv-target');
+
+                    new IntersectionObserver((entries, observer) => {
+                        if (entries.some((entry) => entry.isIntersecting)) {
+                            observer.disconnect();
+                            startReplay();
+                        }
+                    }).observe(target);
                 });
             </script>
         @endpush

@@ -82,15 +82,16 @@ export function toast(message, { type = 'success' } = {}) {
 function playedTimeChart(canvas) {
     const payload = JSON.parse(document.getElementById(canvas.dataset.source)?.textContent || '{}');
     const rangeSelect = canvas.dataset.range ? document.querySelector(canvas.dataset.range) : null;
+    // The dataviz skill's validated categorical slots, in fixed order. Never the
+    // accent or the record colour: those already mean something.
     const palette = [
-        token('--accent', '#22d3ee'),
-        token('--gold', '#fbbf24'),
-        token('--positive', '#4ade80'),
-        token('--bronze', '#d97706'),
-        token('--silver', '#cbd5e1'),
+        token('--series-1', '#3987e5'),
+        token('--series-2', '#d95926'),
+        token('--series-3', '#199e70'),
     ];
     const grid = token('--line', 'rgba(255,255,255,0.08)');
-    const label = token('--muted', '#93a4b3');
+    const label = token('--muted', '#9aa1b8');
+    const tick = token('--subtle', '#6a7189');
     const minutes = (value) => formatPlayedTime(Number(value) * 60);
 
     const slice = (days) => {
@@ -103,9 +104,12 @@ function playedTimeChart(canvas) {
                 ...dataset,
                 data: (dataset.data ?? []).slice(from),
                 backgroundColor: palette[index % palette.length],
-                borderRadius: 3,
-                borderSkipped: false,
-                maxBarThickness: 28,
+                // <=24px, rounded at the data end, square on the baseline.
+                borderRadius: { topLeft: 4, topRight: 4 },
+                borderSkipped: 'bottom',
+                maxBarThickness: 24,
+                barPercentage: 0.8,
+                categoryPercentage: 0.8,
             })),
         };
     };
@@ -130,11 +134,12 @@ function playedTimeChart(canvas) {
                 },
             },
             scales: {
-                x: { grid: { display: false }, ticks: { color: label, maxRotation: 0, autoSkipPadding: 16 } },
+                x: { grid: { display: false }, border: { display: false }, ticks: { color: tick, maxRotation: 0, autoSkipPadding: 16 } },
                 y: {
                     beginAtZero: true,
                     grid: { color: grid },
-                    ticks: { color: label, callback: (value) => minutes(value) },
+                    border: { display: false },
+                    ticks: { color: tick, callback: (value) => minutes(value) },
                 },
             },
         },

@@ -1,67 +1,98 @@
 @use('App\Support\TimeFormat')
 
+@php
+    $records = collect($latestTimes)->where('rank', 1)->take(8);
+    $hotMax = max(1, $hotMaps->max('runs') ?? 1);
+@endphp
+
 <x-layouts.app>
-    <div class="space-y-2">
-        {{-- Hero --}}
-        <section class="panel bracket">
-            <div class="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-center">
-                <div>
-                    <p class="hud-label"><x-icon name="zap" class="size-3.5" /> CS-GFX speedrun network</p>
+    <div class="space-y-4">
+        {{-- Record of the day --}}
+        @if ($spotlight)
+            @php($spotDelta = $spotlight->best_time !== null ? (int) $spotlight->time - (int) $spotlight->best_time : null)
 
-                    <h1 class="display-xl mt-1.5">Track runs. Break <span class="text-accent">records</span>.</h1>
+            <x-cover :name="$spotlight->map_name" class="rounded-[10px] border border-line">
+                <div class="grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                    <div class="min-w-0">
+                        <p class="hud-label !text-white/70">
+                            <x-icon name="crown" class="size-3.5 text-gold" />
+                            {{ (int) $spotlight->rank === 1 ? 'World record' : 'Latest run' }}
+                        </p>
 
-                    <p class="mt-2 max-w-xl text-muted">
-                        Every finished run from the bhop and deathrun servers, ranked per map and
-                        category, with sync, strafes and the replay of every record line.
-                    </p>
+                        <p class="hero-figure mt-3 !text-white">{{ TimeFormat::runtime($spotlight->time) }}</p>
 
-                    <div class="mt-3 flex flex-wrap gap-1.5">
-                        <a href="{{ route('maps.index') }}" class="btn btn-primary"><x-icon name="map" /> Browse maps</a>
-                        <a href="{{ route('leaderboard.index') }}" class="btn"><x-icon name="trophy" /> Rankings</a>
-                        <a href="{{ route('replays.index') }}" class="btn"><x-icon name="play" /> Replays</a>
+                        <p class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[15px] text-white/80">
+                            <a href="{{ route('players.show', $spotlight->user_uuid) }}" class="font-bold text-white hover:underline">{{ $spotlight->user_name }}</a>
+                            <span>on</span>
+                            <a href="{{ route('maps.show', $spotlight->map_uuid) }}" class="font-bold text-white hover:underline">{{ $spotlight->map_name }}</a>
+                            <span class="rounded-full bg-white/15 px-2.5 py-0.5 text-[12px] font-semibold text-white">{{ $spotlight->category_name }}</span>
+                        </p>
+
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            <a href="{{ route('runs.show', [$spotlight->map_uuid, $spotlight->category_id, $spotlight->user_uuid]) }}" class="btn btn-primary">
+                                <x-icon name="play" class="size-3.5" /> Open the run
+                            </a>
+                            <a href="{{ route('maps.show', $spotlight->map_uuid) }}" class="btn !bg-white/15 !text-white hover:!bg-white/25">Map leaderboard</a>
+                        </div>
                     </div>
+
+                    <dl class="grid grid-cols-3 gap-2 text-center lg:w-[21rem]">
+                        @foreach ([['Players', $homeStats['players']], ['Maps', $homeStats['maps']], ['Runs', $homeStats['records']]] as [$label, $value])
+                            <div class="rounded-lg bg-black/35 px-3 py-3 backdrop-blur">
+                                <dd class="big-figure text-white">{{ number_format($value) }}</dd>
+                                <dt class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-white/60">{{ $label }}</dt>
+                            </div>
+                        @endforeach
+                    </dl>
+                </div>
+            </x-cover>
+        @endif
+
+        {{-- New records, as cards --}}
+        @if ($records->isNotEmpty())
+            <section>
+                <div class="mb-2 flex items-center justify-between">
+                    <p class="hud-label"><x-icon name="crown" class="size-3.5 text-gold" /> New world records</p>
+                    <a href="{{ route('replays.index') }}" class="text-[12px] font-semibold text-muted hover:text-accent">All replays</a>
                 </div>
 
-                <dl class="grid grid-cols-2 gap-2">
-                    @foreach ([
-                        ['Players', $homeStats['players'], 'users'],
-                        ['Maps', $homeStats['maps'], 'map'],
-                        ['Categories', $homeStats['categories'], 'flag'],
-                        ['Runs', $homeStats['records'], 'timer'],
-                    ] as [$label, $value, $icon])
-                        <div class="rounded-sm bg-black/25 px-3 py-2">
-                            <dt class="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-subtle">
-                                <x-icon :name="$icon" class="size-3.5" /> {{ $label }}
-                            </dt>
-                            <dd class="mt-0.5 font-mono text-lg tabular text-accent">{{ number_format($value) }}</dd>
-                        </div>
+                <div class="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+                    @foreach ($records as $record)
+                        <a href="{{ route('runs.show', [$record->map_uuid, $record->category_id, $record->user_uuid]) }}"
+                           class="group w-56 shrink-0 overflow-hidden rounded-[10px] border border-line bg-surface-1 hover:border-line-strong">
+                            <x-cover :name="$record->map_name" class="h-16 px-3 py-2">
+                                <p class="truncate text-[13px] font-bold text-white">{{ $record->map_name }}</p>
+                                <p class="text-[11px] text-white/70">{{ $record->category_name }}</p>
+                            </x-cover>
+                            <div class="flex items-end justify-between gap-2 px-3 py-2.5">
+                                <div class="min-w-0">
+                                    <p class="text-[17px] font-bold leading-none tracking-tight group-hover:text-accent">{{ TimeFormat::runtime($record->time) }}</p>
+                                    <p class="mt-1 truncate text-[12px] text-muted">{{ $record->user_name }}</p>
+                                </div>
+                                <x-icon name="crown" class="size-4 text-gold" />
+                            </div>
+                        </a>
                     @endforeach
-                </dl>
-            </div>
-        </section>
+                </div>
+            </section>
+        @endif
 
-        <div class="grid gap-2 xl:grid-cols-[minmax(0,1fr)_14rem]">
-            {{-- Live feed --}}
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_19rem]">
+            {{-- Feed --}}
             <x-ui.panel flush>
                 <header class="panel-header">
-                    <div class="flex items-center gap-2">
-                        <p class="hud-label"><x-icon name="flame" class="size-3.5" /> Latest runs</p>
-                        <span class="pill">last 24h</span>
-                    </div>
-
-                    <a href="{{ route('leaderboard.index') }}" class="text-[11px] text-muted hover:text-accent">Rankings &raquo;</a>
+                    <p class="hud-label"><x-icon name="flame" class="size-3.5" /> Latest runs <span class="pill ms-1">24h</span></p>
+                    <p class="text-[11px] text-subtle">{{ number_format($homeStats['recent_records']) }} runs · {{ number_format($homeStats['active_players']) }} players</p>
                 </header>
 
-                <x-ui.table min="620px">
+                <x-ui.table min="600px">
                     <thead>
                         <tr>
-                            <th class="w-24">Rank</th>
-                            <th class="text-right">Time</th>
-                            <th class="text-right">Gap</th>
+                            <th class="w-20">Rank</th>
                             <th>Player</th>
                             <th>Map</th>
-                            <th>Category</th>
-                            <th class="hidden text-right lg:table-cell">Start</th>
+                            <th class="text-right">Time</th>
+                            <th class="text-right">Gap</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,55 +102,87 @@
                             <tr @class(['is-record' => $isRecord])>
                                 <td>
                                     @if ($isRecord)
-                                        <span class="rank rank-1" title="A new world record"><x-icon name="crown" class="size-3" /> WR</span>
+                                        <span class="rank rank-1"><x-icon name="crown" class="size-3" /> WR</span>
                                     @else
                                         <x-ui.rank :rank="$record->rank" />
                                     @endif
                                 </td>
+                                <td><a href="{{ route('players.show', $record->user_uuid) }}" class="link">{{ $record->user_name }}</a></td>
+                                <td>
+                                    <a href="{{ route('maps.show', $record->map_uuid) }}" class="text-ink hover:text-accent">{{ $record->map_name }}</a>
+                                    <span class="ms-1 text-[11px] text-subtle">{{ $record->category_name }}</span>
+                                </td>
                                 <td class="time time-lg text-right">
-                                    <a href="{{ route('runs.show', [$record->map_uuid, $record->category_id, $record->user_uuid]) }}"
-                                       @class(['hover:text-accent', 'text-gold' => $isRecord])>{{ TimeFormat::runtime($record->time) }}</a>
+                                    <a href="{{ route('runs.show', [$record->map_uuid, $record->category_id, $record->user_uuid]) }}" class="hover:text-accent">{{ TimeFormat::runtime($record->time) }}</a>
                                 </td>
                                 <td @class(['delta text-right', 'delta-record' => $isRecord])>
                                     {{ TimeFormat::delta($record->best_time !== null ? (int) $record->time - (int) $record->best_time : null) }}
                                 </td>
-                                <td><a href="{{ route('players.show', $record->user_uuid) }}" class="link">{{ $record->user_name }}</a></td>
-                                <td><a href="{{ route('maps.show', $record->map_uuid) }}" class="text-ink hover:text-accent">{{ $record->map_name }}</a></td>
-                                <td><x-ui.pill>{{ $record->category_name }}</x-ui.pill></td>
-                                <td class="hidden text-right tabular text-muted lg:table-cell">{{ $record->start_speed ?? '—' }}</td>
                             </tr>
                         @empty
-                            <x-ui.empty :colspan="7" message="No runs in the last 24 hours." />
+                            <x-ui.empty :colspan="5" message="No runs in the last 24 hours." />
                         @endforelse
                     </tbody>
                 </x-ui.table>
-
-                <footer class="flex items-center justify-between gap-4 border-t border-line px-3 py-2 text-[11px] text-subtle">
-                    <span>{{ number_format($homeStats['recent_records']) }} runs today</span>
-                    <span>{{ number_format($homeStats['active_players']) }} players active</span>
-                </footer>
             </x-ui.panel>
 
-            {{-- Record holders --}}
-            <x-ui.panel flush class="h-max">
-                <header class="panel-header">
-                    <p class="hud-label"><x-icon name="trophy" class="size-3.5" /> Record holders</p>
-                </header>
+            <aside class="space-y-4">
+                {{-- Close calls --}}
+                <x-ui.panel>
+                    <header class="panel-header"><p class="hud-label"><x-icon name="target" class="size-3.5" /> Close calls</p></header>
 
-                <div class="flex flex-col">
-                    @forelse ($recordHolders as $index => $holder)
-                        <a href="{{ route('players.show', $holder->uuid) }}" class="side-link !py-2.5">
-                            <x-icon name="crown" @class(['size-4', 'text-gold' => $index === 0, 'text-silver' => $index === 1, 'text-bronze' => $index === 2]) />
-                            <span class="min-w-0 flex-1 truncate text-ink">{{ $holder->name }}</span>
-                            <span class="font-mono text-[11px] text-muted">{{ $holder->records }} WR</span>
-                        </a>
-                    @empty
-                        <p class="px-3 py-4 text-center text-[11px] text-subtle">No new records today.</p>
-                    @endforelse
-                </div>
+                    <div class="divide-y divide-line">
+                        @forelse ($closeCalls as $run)
+                            <a href="{{ route('runs.show', [$run->map_uuid, $run->category_id, $run->user_uuid]) }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-accent-soft">
+                                <span class="min-w-0 flex-1">
+                                    <span class="block truncate font-semibold">{{ $run->user_name }}</span>
+                                    <span class="block truncate text-[11px] text-subtle">{{ $run->map_name }} · {{ $run->category_name }}</span>
+                                </span>
+                                <span class="delta !text-ink">{{ TimeFormat::delta((int) $run->time - (int) $run->best_time) }}</span>
+                            </a>
+                        @empty
+                            <p class="px-4 py-5 text-center text-[12px] text-subtle">Nobody within 2% of a record today.</p>
+                        @endforelse
+                    </div>
+                    <p class="border-t border-line px-4 py-2 text-[11px] text-subtle">runs within 2% of the world record</p>
+                </x-ui.panel>
 
-                <p class="border-t border-line px-3 py-2 text-[10px] text-subtle">most records set in the last 24 hours</p>
-            </x-ui.panel>
+                {{-- Hot maps --}}
+                <x-ui.panel>
+                    <header class="panel-header"><p class="hud-label"><x-icon name="flame" class="size-3.5" /> Hot maps</p></header>
+
+                    <div class="space-y-3 p-4">
+                        @forelse ($hotMaps as $map)
+                            <a href="{{ route('maps.show', $map->uuid) }}" class="block">
+                                <span class="flex items-baseline justify-between gap-2">
+                                    <span class="truncate font-semibold hover:text-accent">{{ $map->name }}</span>
+                                    <span class="text-[12px] tabular text-muted">{{ $map->runs }}</span>
+                                </span>
+                                <span class="meter mt-1.5"><span class="meter-fill" style="width: {{ round($map->runs / $hotMax * 100) }}%"></span></span>
+                            </a>
+                        @empty
+                            <p class="py-2 text-center text-[12px] text-subtle">No activity yet.</p>
+                        @endforelse
+                    </div>
+                </x-ui.panel>
+
+                {{-- Record holders --}}
+                <x-ui.panel>
+                    <header class="panel-header"><p class="hud-label"><x-icon name="trophy" class="size-3.5" /> Record holders today</p></header>
+
+                    <div class="divide-y divide-line">
+                        @forelse ($recordHolders as $index => $holder)
+                            <a href="{{ route('players.show', $holder->uuid) }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-accent-soft">
+                                <span class="rank {{ $index === 0 ? 'rank-1' : ($index === 1 ? 'rank-2' : 'rank-3') }}">{{ $index + 1 }}</span>
+                                <span class="min-w-0 flex-1 truncate font-semibold">{{ $holder->name }}</span>
+                                <span class="text-[12px] text-muted">{{ $holder->records }} WR</span>
+                            </a>
+                        @empty
+                            <p class="px-4 py-5 text-center text-[12px] text-subtle">No new records today.</p>
+                        @endforelse
+                    </div>
+                </x-ui.panel>
+            </aside>
         </div>
     </div>
 </x-layouts.app>
