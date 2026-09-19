@@ -1,28 +1,14 @@
 <x-layouts.app title="Replays">
-    <div class="space-y-3">
+    <div class="space-y-2">
+        <x-ui.breadcrumb :trail="['Replays' => null]" />
+
         <x-ui.page-header
+            icon="play"
             eyebrow="Replay vault"
             title="Record lines"
-            description="The fastest run on every map and category, with the replay attached."
-        >
-            <x-slot:actions>
-                <x-ui.search
-                    id="replay-search"
-                    label="Search replays"
-                    placeholder="Map, category or player…"
-                    :value="$search"
-                    class="w-full md:w-80"
-                />
-            </x-slot:actions>
-        </x-ui.page-header>
+            description="The fastest run on every map and category, with its replay attached."
+        />
 
-        <div
-            data-live-table
-            data-endpoint="{{ route('replays.index') }}"
-            data-input="#replay-search"
-            class="transition-opacity"
-        >
-            @include('replays.partials.replays-table')
-        </div>
+        <livewire:replay-browser />
     </div>
 </x-layouts.app>

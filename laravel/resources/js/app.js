@@ -30,6 +30,25 @@ export function formatRuntime(milliseconds) {
     return hours > 0 ? `${hours}:${tail}` : tail;
 }
 
+/** Gap to a record in ms: +0.421, +1:02.310, or WR when it is the record. */
+export function formatDelta(milliseconds) {
+    const value = Number(milliseconds);
+
+    if (!Number.isFinite(value)) {
+        return '—';
+    }
+
+    if (value <= 0) {
+        return 'WR';
+    }
+
+    if (value < 60000) {
+        return `+${Math.floor(value / 1000)}.${String(Math.floor(value % 1000)).padStart(3, '0')}`;
+    }
+
+    return `+${formatRuntime(value)}`;
+}
+
 /** Played time, stored as seconds, rendered hh:mm:ss. */
 export function formatPlayedTime(seconds) {
     const value = Math.max(0, Number(seconds) || 0);
@@ -54,155 +73,6 @@ export function toast(message, { type = 'success' } = {}) {
             fontWeight: '600',
         },
     }).showToast();
-}
-
-/**
- * Search-as-you-type + paginate-without-reloading for the server-rendered
- * tables. The markup declares everything:
- *
- *   <div data-live-table data-endpoint="/players" data-input="#player-search">
- *       ...server-rendered partial...
- *   </div>
- *
- * The endpoint returns just the table partial when the request is XHR, which
- * is what PlayerController@index and ReplayController@index already do.
- */
-function liveTable(root) {
-    const input = root.dataset.input ? document.querySelector(root.dataset.input) : null;
-    const endpoint = root.dataset.endpoint || window.location.pathname;
-    const delay = Number(root.dataset.delay || 150);
-    let timer = null;
-    let controller = null;
-
-    const load = (url, { push = true } = {}) => {
-        controller?.abort();
-        controller = new AbortController();
-        root.classList.add('opacity-50');
-
-        fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            signal: controller.signal,
-        })
-            .then((response) => response.text())
-            .then((html) => {
-                root.innerHTML = html;
-                root.classList.remove('opacity-50');
-
-                if (push) {
-                    window.history.replaceState({}, '', url);
-                }
-            })
-            .catch((error) => {
-                if (error.name !== 'AbortError') {
-                    root.classList.remove('opacity-50');
-                    toast('Could not load that page.', { type: 'error' });
-                }
-            });
-    };
-
-    input?.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            const url = new URL(endpoint, window.location.origin);
-            url.searchParams.set('search', input.value);
-            url.searchParams.delete('page');
-            load(url);
-        }, delay);
-    });
-
-    root.addEventListener('click', (event) => {
-        const link = event.target.closest('.pagination a');
-
-        if (!link) {
-            return;
-        }
-
-        event.preventDefault();
-        const url = new URL(link.href);
-        url.searchParams.set('ajax', '1');
-        load(url);
-    });
-}
-
-/**
- * Sortable, searchable record table on the player profile. The server renders
- * the rows and the pagination; this only swaps them out.
- */
-function recordsTable(root) {
-    const input = root.dataset.input ? document.querySelector(root.dataset.input) : null;
-    let sortBy = root.dataset.sortBy || 'RecordDate';
-    let direction = root.dataset.direction || 'desc';
-    let timer = null;
-    let controller = null;
-
-    const load = (page = 1) => {
-        controller?.abort();
-        controller = new AbortController();
-        root.classList.add('opacity-50');
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('ajax', '1');
-        url.searchParams.set('page', page);
-        url.searchParams.set('search', input?.value ?? '');
-        url.searchParams.set('sort_by', sortBy);
-        url.searchParams.set('direction', direction);
-
-        fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            signal: controller.signal,
-        })
-            .then((response) => response.text())
-            .then((html) => {
-                root.innerHTML = html;
-                root.classList.remove('opacity-50');
-                markSortedColumn();
-            })
-            .catch((error) => {
-                if (error.name !== 'AbortError') {
-                    root.classList.remove('opacity-50');
-                }
-            });
-    };
-
-    const markSortedColumn = () => {
-        root.querySelectorAll('th[data-sort]').forEach((th) => {
-            const active = th.dataset.sort === sortBy;
-            th.dataset.active = active ? direction : '';
-            const caret = th.querySelector('[data-caret]');
-
-            if (caret) {
-                caret.textContent = active ? (direction === 'asc' ? '↑' : '↓') : '';
-            }
-        });
-    };
-
-    input?.addEventListener('input', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => load(1), 300);
-    });
-
-    root.addEventListener('click', (event) => {
-        const header = event.target.closest('th[data-sort]');
-
-        if (header) {
-            const column = header.dataset.sort;
-            direction = sortBy === column && direction === 'asc' ? 'desc' : 'asc';
-            sortBy = column;
-            load(1);
-
-            return;
-        }
-
-        const link = event.target.closest('.pagination a');
-
-        if (link) {
-            event.preventDefault();
-            const page = new URL(link.href).searchParams.get('page') || 1;
-            load(page);
-        }
-    });
-
-    markSortedColumn();
 }
 
 /**
@@ -240,7 +110,9 @@ function playedTimeChart(canvas) {
         };
     };
 
-    const chart = new Chart(canvas, {
+    let chart = null;
+
+    const create = () => new Chart(canvas, {
         type: 'bar',
         data: slice(rangeSelect?.value ?? payload.labels?.length ?? 30),
         options: {
@@ -268,12 +140,28 @@ function playedTimeChart(canvas) {
         },
     });
 
+    // The chart sits on a tab that starts hidden. Chart.js sizes itself from
+    // the canvas at construction, so building it while display:none leaves the
+    // bars laid out at zero width. Wait until the canvas is actually on screen.
+    const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+            observer.disconnect();
+            chart = create();
+        }
+    });
+
+    observer.observe(canvas);
+
     rangeSelect?.addEventListener('change', () => {
+        if (!chart) {
+            return;
+        }
+
         chart.data = slice(rangeSelect.value);
         chart.update();
     });
 
-    return chart;
+    return canvas;
 }
 
 /** Flash messages handed over by the server as a JSON island. */
@@ -311,8 +199,6 @@ function once(selector, initialise) {
 }
 
 function boot() {
-    once('[data-live-table]', liveTable);
-    once('[data-records-table]', recordsTable);
     once('[data-chart="played-time"]', playedTimeChart);
     flashMessages();
 }
@@ -320,4 +206,4 @@ function boot() {
 document.addEventListener('DOMContentLoaded', boot);
 document.addEventListener('livewire:navigated', boot);
 
-window.TimerPanel = { formatRuntime, formatPlayedTime, toast, Chart };
+window.TimerPanel = { formatRuntime, formatDelta, formatPlayedTime, toast, Chart };

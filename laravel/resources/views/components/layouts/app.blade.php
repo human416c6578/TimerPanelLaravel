@@ -23,9 +23,7 @@
             </main>
         </div>
 
-        <div class="hazard"></div>
-
-        <footer class="bg-surface-1">
+        <footer class="border-t border-line bg-surface-0/60">
             <div class="flex flex-col gap-1 px-3 py-2.5 text-[11px] text-subtle sm:flex-row sm:items-center sm:justify-between">
                 <p>&copy; {{ date('Y') }} {{ config('app.name') }} &mdash; times read live from the game servers</p>
 

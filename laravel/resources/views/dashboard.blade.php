@@ -74,10 +74,11 @@
             </x-ui.panel>
 
             <aside class="space-y-3">
-                <div class="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+                <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
                     <x-ui.stat label="Runs today" :value="number_format($stats['recent_times'])" />
                     <x-ui.stat label="Active players" :value="number_format($stats['active_players'])" />
                     <x-ui.stat label="Categories" :value="number_format($stats['categories'])" />
+                    <x-ui.stat label="Maps with no runs" :value="number_format($stats['empty_maps'] ?? 0)" hint="nobody has finished them yet" />
                 </div>
 
                 <x-ui.panel eyebrow="Maintenance" flush>

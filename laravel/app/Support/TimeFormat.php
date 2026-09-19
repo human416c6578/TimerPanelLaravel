@@ -39,4 +39,27 @@ class TimeFormat
             $seconds % 60
         );
     }
+
+    /**
+     * The gap to a record, in milliseconds: +0.421 or +1:02.310. Zero means
+     * the run *is* the record and reads as such.
+     */
+    public static function delta(int|float|string|null $milliseconds): string
+    {
+        if ($milliseconds === null || $milliseconds === '') {
+            return '—';
+        }
+
+        $milliseconds = (int) $milliseconds;
+
+        if ($milliseconds <= 0) {
+            return 'WR';
+        }
+
+        if ($milliseconds < 60000) {
+            return sprintf('+%d.%03d', intdiv($milliseconds, 1000), $milliseconds % 1000);
+        }
+
+        return '+'.self::runtime($milliseconds);
+    }
 }

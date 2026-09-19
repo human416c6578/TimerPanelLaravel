@@ -17,6 +17,11 @@ class DashboardController extends Controller
                 'players' => DB::connection('game_mysql')->table('users')->count(),
                 'maps' => DB::connection('game_mysql')->table('maps')->count(),
                 'categories' => DB::connection('game_mysql')->table('categories')->count(),
+                'empty_maps' => DB::connection('game_mysql')
+                    ->table('maps as m')
+                    ->leftJoin('times as t', 't.map_uuid', '=', 'm.uuid')
+                    ->whereNull('t.map_uuid')
+                    ->count(),
                 'times' => DB::connection('game_mysql')->table('times')->count(),
                 'ranked_times' => DB::connection('game_mysql')->table('ranked_times')->count(),
                 'recent_times' => DB::connection('game_mysql')

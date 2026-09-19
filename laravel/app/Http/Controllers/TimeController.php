@@ -48,6 +48,9 @@ class TimeController extends Controller
                         'm.name as map_name',
                         'c.name as category_name',
                         'rt.rank',
+                        // The record on that map/category, so the feed can show
+                        // how far off the pace each run was.
+                        'best.time as best_time',
                     )
                     ->join('users as u', 'u.uuid', '=', 't.user_uuid')
                     ->join('maps as m', 'm.uuid', '=', 't.map_uuid')
@@ -57,6 +60,12 @@ class TimeController extends Controller
                             ->on('rt.user_uuid', '=', 't.user_uuid')
                             ->on('rt.map_uuid', '=', 't.map_uuid')
                             ->on('rt.category_id', '=', 't.category_id');
+                    })
+                    ->leftJoin('ranked_times as best', function ($join) {
+                        $join
+                            ->on('best.map_uuid', '=', 't.map_uuid')
+                            ->on('best.category_id', '=', 't.category_id')
+                            ->where('best.rank', '=', 1);
                     })
                     ->orderByDesc('t.record_date')
                     ->get();
@@ -103,6 +112,16 @@ class TimeController extends Controller
 
         $servers = $serverStatus->all();
 
-        return view('welcome', compact('latestTimes', 'homeStats', 'servers'));
+        // Who took the most records in the last 24 hours, from the feed we
+        // already have — no further query.
+        $recordHolders = collect($latestTimes)
+            ->where('rank', 1)
+            ->groupBy('user_uuid')
+            ->map(fn ($runs) => (object) ['name' => $runs->first()->user_name, 'uuid' => $runs->first()->user_uuid, 'records' => $runs->count()])
+            ->sortByDesc('records')
+            ->take(3)
+            ->values();
+
+        return view('welcome', compact('latestTimes', 'homeStats', 'servers', 'recordHolders'));
     }
 }

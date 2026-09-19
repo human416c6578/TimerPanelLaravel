@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         // Run times and played times were formatted by four separate copies of
         // the same arithmetic spread across the views; these are the only two.
         Blade::directive('runtime', fn ($expression) => "<?php echo \App\Support\TimeFormat::runtime({$expression}); ?>");
+        Blade::directive('delta', fn ($expression) => "<?php echo \App\Support\TimeFormat::delta({$expression}); ?>");
         Blade::directive('played', fn ($expression) => "<?php echo \App\Support\TimeFormat::played({$expression}); ?>");
 
         // The sidebar shows live server status on every page. This is a cached

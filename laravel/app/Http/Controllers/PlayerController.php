@@ -6,6 +6,7 @@ use App\Models\GameUser;
 use App\Models\PlayedTime;
 use App\Models\PlayedTimeInfo;
 use App\Models\Time;
+use App\Services\PlayerProfile;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -17,40 +18,12 @@ class PlayerController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->input('search', '');
-        $page = $request->input('page', 1);
-        $perPage = 15;
-
-        $cacheKey = 'players:'.md5($search.':page:'.$page);
-
-        $players = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($search, $perPage) {
-            $query = GameUser::query()
-                ->select('name', 'auth_id', 'uuid');
-
-            if ($search) {
-                $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('auth_id', 'like', '%'.$search.'%');
-            }
-
-            return $query->orderBy('name')->paginate($perPage);
-        });
-
-        if ($request->ajax()) {
-            return view('player.partials.players-table', compact('players'))->render();
-        }
-
-        return view('player.list', compact('players'));
+        return view('player.list', ['search' => trim((string) $request->input('search', ''))]);
     }
 
-    public function profile(Request $request, $uuid)
+    public function profile(Request $request, $uuid, PlayerProfile $profile)
     {
-        $latestTimes = $this->getLatestTimesFromCache($uuid, $request);
-
-        if ($request->ajax() || $request->get('ajax') == 1) {
-            return response()->view('player.partials.latest-times', compact('latestTimes'));
-        }
-
-        $user = GameUser::select('uuid', 'name', 'auth_id')->where('uuid', $uuid)->firstOrFail();
+        $user = GameUser::select('uuid', 'name', 'auth_id', 'nationality')->where('uuid', $uuid)->firstOrFail();
 
         $authId = $user->auth_id;
 
@@ -90,6 +63,13 @@ class PlayerController extends Controller
 
         $chartData = $this->generatePlayedTimeChartData($user->auth_id);
 
+        // The same cached collection the records table pages through.
+        $allRuns = $profile->runs($uuid);
+
+        $rankSummary = $profile->rankSummary($allRuns);
+        $withinReach = $profile->withinReach($allRuns);
+        $medals = $profile->medals($uuid);
+
         return view(
             'player.profile',
             compact(
@@ -97,102 +77,17 @@ class PlayerController extends Controller
                 'steamData',
                 'totalTimePlayed',
                 'totalTimes',
-                'latestTimes',
-                'chartData'
+                'chartData',
+                'rankSummary',
+                'withinReach',
+                'medals'
             )
-        );
-    }
-
-    public function getLatestTimesFromCache(string $userUuid, Request $request)
-    {
-        $userTimes = Cache::remember("ranked_times_{$userUuid}", 600, function () use ($userUuid) {
-            return $this->getUserRankedTimes($userUuid);
-        });
-
-        $userTimes = collect($userTimes);
-
-        // Apply search filter if needed
-        if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $userTimes = $userTimes->filter(
-                fn ($item) => str_contains(strtolower($item->MapName), $search)
-            );
-        }
-
-        // Sorting - e.g. by 'record_date', 'rank', 'category_id', 'map'
-        if ($request->filled('sort_by')) {
-            $sortBy = $request->sort_by;
-            $direction = $request->input('direction', 'asc');
-
-            $userTimes = $userTimes->sortBy(
-                fn ($item) => $item->{$sortBy === 'map' ? 'MapName' : $sortBy},
-                SORT_REGULAR,
-                $direction === 'desc'
-            );
-        }
-
-        // Paginate manually
-        $page = $request->input('page', 1);
-        $perPage = 14;
-        $offset = ($page - 1) * $perPage;
-        $paged = $userTimes->slice($offset, $perPage)->values();
-
-        // Return as Laravel LengthAwarePaginator to keep pagination links working
-        return new \Illuminate\Pagination\LengthAwarePaginator(
-            $paged,
-            $userTimes->count(),
-            $perPage,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
         );
     }
 
     public function getUserRankedTimes(string $userUuid): Collection
     {
-        /*
-        $query = "
-            WITH RankedTimes AS (
-                SELECT
-                    t.user_uuid AS UserUUID,
-                    m.uuid AS MapUUID,
-                    m.name AS MapName,
-                    c.name AS CategoryName,
-                    c.id AS CategoryId,
-                    t.time AS Time,
-                    t.record_date AS RecordDate,
-                    t.start_speed AS StartSpeed,
-                    ROW_NUMBER() OVER (PARTITION BY t.map_uuid, t.category_id ORDER BY t.time ASC) AS Rank
-                FROM times t
-                INNER JOIN maps m ON t.map_uuid = m.uuid
-                INNER JOIN categories c ON t.category_id = c.id
-            )
-            SELECT Rank, MapUUID, MapName, CategoryName, CategoryId, Time, RecordDate, StartSpeed
-            FROM RankedTimes
-            WHERE UserUUID = ?
-        ";*/
-        $query = '
-            SELECT 
-                rt.rank AS Rank,
-                m.uuid        AS MapUUID,
-                m.name        AS MapName,
-                c.name        AS CategoryName,
-                c.id          AS CategoryId,
-                t.time        AS Time,
-                t.record_date AS RecordDate,
-                t.start_speed AS StartSpeed
-            FROM ranked_times rt
-            JOIN times t 
-                ON t.user_uuid   = rt.user_uuid
-            AND t.map_uuid    = rt.map_uuid
-            AND t.category_id = rt.category_id
-            JOIN maps m 
-                ON m.uuid = t.map_uuid
-            JOIN categories c 
-                ON c.id = t.category_id
-            WHERE rt.user_uuid = ?;
-        ';
-
-        return collect(DB::connection('game_mysql')->select($query, [$userUuid]));
+        return app(PlayerProfile::class)->fetchRuns($userUuid);
     }
 
     public function deleteUserRankedTimes(string $userUuid)

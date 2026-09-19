@@ -3,22 +3,25 @@
 @endphp
 
 <x-layouts.app title="Leaderboard">
-    <div class="space-y-3" x-data="{ tab: 'played' }">
+    <div class="space-y-2" x-data="{ tab: 'played' }">
+        <x-ui.breadcrumb :trail="['Rankings' => null]" />
+
         <x-ui.page-header
+            icon="trophy"
             eyebrow="Season standings"
             title="Leaderboard"
             description="Who lives on the server, and who actually finishes maps."
         >
             <x-slot:actions>
-                <div class="flex border-y border-e border-line">
-                    <button type="button" class="nav-link" :class="tab === 'played' && 'is-active'" x-on:click="tab = 'played'">Played time</button>
-                    <button type="button" class="nav-link" :class="tab === 'ranking' && 'is-active'" x-on:click="tab = 'ranking'">Ranking</button>
+                <div class="tabs !border-b-0 bg-transparent">
+                    <button type="button" class="tab" :class="tab === 'played' && 'is-active'" x-on:click="tab = 'played'"><x-icon name="clock" class="size-3.5" /> Played time</button>
+                    <button type="button" class="tab" :class="tab === 'ranking' && 'is-active'" x-on:click="tab = 'ranking'"><x-icon name="trophy" class="size-3.5" /> Ranking</button>
                 </div>
             </x-slot:actions>
         </x-ui.page-header>
 
         {{-- Played time --}}
-        <div x-show="tab === 'played'" class="space-y-3">
+        <div x-show="tab === 'played'" class="space-y-2">
             @if ($topPlayedTimes->count() >= 3)
                 <div class="grid grid-cols-3 items-end gap-2">
                     @foreach ($podiumOrder as $slot)
@@ -30,7 +33,7 @@
                             'bracket border-gold py-8' => $place === 1,
                             'py-5' => $place !== 1,
                         ])>
-                            <span @class(['rank', 'rank-'.$place])>#{{ $place }}</span>
+                            <x-icon name="crown" @class(['size-6', 'text-gold' => $place === 1, 'text-silver' => $place === 2, 'text-bronze' => $place === 3]) />
 
                             <p @class([
                                 'mt-1.5 w-full truncate font-bold uppercase',
@@ -69,7 +72,7 @@
         </div>
 
         {{-- Ranking --}}
-        <div x-show="tab === 'ranking'" x-cloak class="space-y-3">
+        <div x-show="tab === 'ranking'" x-cloak class="space-y-2">
             <x-ui.panel flush title="Ranked score" eyebrow="Medals earned">
                 <x-ui.table min="520px">
                     <thead>

@@ -1,28 +1,14 @@
 <x-layouts.app title="Players">
-    <div class="space-y-3">
+    <div class="space-y-2">
+        <x-ui.breadcrumb :trail="['Players' => null]" />
+
         <x-ui.page-header
+            icon="users"
             eyebrow="Runner directory"
             title="Players"
-            description="Search by name or Steam ID, then open a profile for records and played time."
-        >
-            <x-slot:actions>
-                <x-ui.search
-                    id="player-search"
-                    label="Search players"
-                    placeholder="Name or Steam ID…"
-                    :value="request('search')"
-                    class="w-full md:w-80"
-                />
-            </x-slot:actions>
-        </x-ui.page-header>
+            description="Search by name or Steam ID, then open a profile for records, medals and played time."
+        />
 
-        <div
-            data-live-table
-            data-endpoint="{{ route('players.index') }}"
-            data-input="#player-search"
-            class="transition-opacity"
-        >
-            @include('player.partials.players-table')
-        </div>
+        <livewire:player-directory />
     </div>
 </x-layouts.app>

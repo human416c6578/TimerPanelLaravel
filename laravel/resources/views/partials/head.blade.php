@@ -9,4 +9,5 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+@livewireStyles
 @fluxAppearance

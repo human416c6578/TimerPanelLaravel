@@ -5,6 +5,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ReplayController;
+use App\Http\Controllers\RunController;
 use App\Http\Controllers\TimeController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -23,6 +24,11 @@ Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leade
 
 Route::get('/proxy', [App\Http\Controllers\ProxyController::class, 'fetch']);
 Route::get('/replays', [ReplayController::class, 'index'])->name('replays.index');
+
+// A single run: stats, standing, and the replay when it is the record.
+Route::get('/runs/{map}/{category}/{user}', [RunController::class, 'show'])->name('runs.show');
+
+// The old replay URL pointed at whoever held the record; keep it working.
 Route::get('/replays/{map}/{category}', [ReplayController::class, 'show'])->name('replays.show');
 
 Route::get('/', [TimeController::class, 'index'])->name('home');

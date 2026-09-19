@@ -1,11 +1,11 @@
 <x-ui.panel flush>
     <header class="panel-header">
-        <p class="hud-label">Minutes per day</p>
-        <p class="font-mono text-[11px] text-subtle">one colour per server</p>
+        <p class="hud-label"><x-icon name="bar-chart" class="size-3.5" /> Minutes per day</p>
+        <p class="text-[11px] text-subtle">one colour per server</p>
     </header>
 
     <div class="p-4">
-        <div class="relative h-[24rem]">
+        <div class="relative h-[22rem]">
             <canvas
                 data-chart="played-time"
                 data-source="played-time-data"

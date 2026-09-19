@@ -9,17 +9,16 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-| Timer Panel
+| Timer Panel — Steam client palette
 |
-| Built like a 2010-era Counter-Strike community portal: charcoal panels with
-| gradient title bars, bevelled edges, 11px bold Tahoma in caps, striped
-| tables and an amber accent. System fonts on purpose — no webfont ever looked
-| like those sites.
+| Navy panels on a darker navy page, the light Steam blue for anything
+| interactive, amber reserved for records. Motiva Sans is Valve's and not ours,
+| so the stack falls through to Arial like the client does on Linux.
 */
 @theme {
-    --font-sans: Tahoma, Verdana, Geneva, 'DejaVu Sans', Arial, sans-serif;
-    --font-display: Tahoma, Verdana, Geneva, 'DejaVu Sans', Arial, sans-serif;
-    --font-mono: Consolas, 'Lucida Console', Monaco, 'DejaVu Sans Mono', monospace;
+    --font-sans: 'Motiva Sans', Arial, Helvetica, 'Liberation Sans', sans-serif;
+    --font-display: 'Motiva Sans', Arial, Helvetica, 'Liberation Sans', sans-serif;
+    --font-mono: Consolas, 'Liberation Mono', Menlo, monospace;
 
     --color-surface-0: var(--surface-0);
     --color-surface-1: var(--surface-1);
@@ -48,87 +47,83 @@
     --color-danger: var(--danger);
     --color-danger-soft: var(--danger-soft);
 
-    --radius-panel: 0px;
+    --radius-panel: 2px;
 }
 
 :root {
     color-scheme: light;
 
-    --surface-0: #d9dadb;
-    --surface-1: #f2f2f2;
-    --surface-2: #e8e8e8;
-    --surface-3: #dcdcdc;
+    --surface-0: #dfe3e8;
+    --surface-1: #ffffff;
+    --surface-2: #eef2f5;
+    --surface-3: #e2e8ee;
 
-    --head-top: #fbfbfb;
-    --head-bottom: #dedede;
-    --bevel: rgb(255 255 255 / 0.85);
-    --shade: rgb(0 0 0 / 0.18);
-    --stripe: rgb(0 0 0 / 0.028);
+    --head-top: #f7f9fb;
+    --head-bottom: #e4eaf0;
+    --bevel: rgb(255 255 255 / 0.9);
+    --shade: rgb(23 26 33 / 0.16);
 
-    --line: #c3c3c3;
-    --line-strong: #9c9c9c;
+    --line: #c8d2dc;
+    --line-strong: #a7b4c1;
 
-    --ink: #1d1d1d;
-    --muted: #55555a;
-    --subtle: #7d7d82;
+    --ink: #17202a;
+    --muted: #4d5b69;
+    --subtle: #75838f;
 
-    --accent: #b35c00;
-    --accent-hover: #8f4a00;
-    --accent-soft: rgb(179 92 0 / 0.12);
+    --accent: #1b6ea8;
+    --accent-hover: #12547f;
+    --accent-soft: rgb(27 110 168 / 0.1);
     --accent-foreground: #ffffff;
 
-    --live: #2f8a2f;
-    --gold: #a07400;
-    --silver: #6a6a6a;
+    --live: #4c7c00;
+    --gold: #9a6b00;
+    --silver: #5f6b76;
     --bronze: #8a4b16;
 
-    --danger: #b02a24;
-    --danger-soft: rgb(176 42 36 / 0.1);
-
-    --texture: rgb(0 0 0 / 0.035);
-
-    --color-accent: var(--accent);
-    --color-accent-content: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
+    --danger: #b3312b;
+    --danger-soft: rgb(179 49 43 / 0.1);
 }
 
 :root:where(.dark, .dark *),
 .dark {
     color-scheme: dark;
 
-    --surface-0: #121212;
-    --surface-1: #1f1f1f;
-    --surface-2: #262626;
-    --surface-3: #2e2e2e;
+    /* #171a21 is the Steam chrome, #1b2838 the page, #2a475e the panels. */
+    --surface-0: #171a21;
+    --surface-1: #1b2838;
+    --surface-2: #22394f;
+    --surface-3: #2a475e;
 
-    --head-top: #3b3b3b;
-    --head-bottom: #282828;
-    --bevel: rgb(255 255 255 / 0.07);
-    --shade: rgb(0 0 0 / 0.6);
-    --stripe: rgb(255 255 255 / 0.022);
+    --head-top: #2a475e;
+    --head-bottom: #1f3648;
+    --bevel: rgb(255 255 255 / 0.06);
+    --shade: rgb(0 0 0 / 0.45);
 
     --line: #000000;
-    --line-strong: #3a3a3a;
+    --line-strong: #3d6486;
 
-    --ink: #d8d8d8;
-    --muted: #9b9b9b;
-    --subtle: #6d6d6d;
+    --ink: #c7d5e0;
+    --muted: #8f98a0;
+    --subtle: #6a7883;
 
-    --accent: #ff9000;
-    --accent-hover: #ffb143;
-    --accent-soft: rgb(255 144 0 / 0.12);
-    --accent-foreground: #1a1206;
+    --accent: #66c0f4;
+    --accent-hover: #a5dcff;
+    --accent-soft: rgb(102 192 244 / 0.12);
+    --accent-foreground: #0d1b24;
 
-    --live: #86c232;
-    --gold: #ffcf40;
-    --silver: #c6c6c6;
+    --live: #a4d007;
+    --gold: #f0b232;
+    --silver: #b9c6d2;
     --bronze: #cd7f32;
 
-    --danger: #e04a42;
-    --danger-soft: rgb(224 74 66 / 0.14);
+    --danger: #d94a42;
+    --danger-soft: rgb(217 74 66 / 0.14);
+}
 
-    --texture: rgb(255 255 255 / 0.018);
-
+/* Flux ships `.dark { --color-accent: white }`, which outranks @theme. */
+:root,
+:root:where(.dark, .dark *),
+.dark {
     --color-accent: var(--accent);
     --color-accent-content: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
@@ -149,28 +144,22 @@
 
     body {
         min-height: 100svh;
-        /* Fine diagonal weave, the way every clan site of the era tiled a
-           4x4 pixel texture behind the layout. */
         background-color: var(--surface-0);
-        background-image: repeating-linear-gradient(
-            45deg,
-            var(--texture) 0 1px,
-            transparent 1px 4px
-        );
         color: var(--ink);
-        font-size: 12px;
-        line-height: 1.5;
+        font-size: 13px;
+        line-height: 1.55;
     }
 
-    h1, h2, h3, .display {
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        text-shadow: 0 1px 0 var(--shade);
+    h1, h2, h3 {
+        font-weight: 400;
+        color: #fff;
+        letter-spacing: 0.01em;
     }
 
-    a {
-        text-underline-offset: 2px;
+    :root:not(.dark) h1,
+    :root:not(.dark) h2,
+    :root:not(.dark) h3 {
+        color: var(--ink);
     }
 
     .tabular,
@@ -183,29 +172,27 @@
         background: var(--accent);
         color: var(--accent-foreground);
     }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--surface-0);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--surface-3);
+    }
 }
 
 @layer components {
-    /* --- the site frame -------------------------------------------------- */
+    /* --- frame ----------------------------------------------------------- */
 
-    /* A fixed content column lifted off the tiled background, the way every
-       layout of the era was built: table-width, centred, shadowed edges. */
     .site-frame {
-        background-color: var(--surface-0);
-        box-shadow:
-            0 0 0 1px var(--line),
-            0 0 24px var(--shade);
-    }
-
-    /* Black/amber hazard tape, used as a section divider. */
-    .hazard {
-        height: 4px;
-        background-image: repeating-linear-gradient(
-            -45deg,
-            var(--accent) 0 8px,
-            transparent 8px 16px
-        );
-        opacity: 0.85;
+        background-color: var(--surface-1);
+        box-shadow: 0 0 30px var(--shade);
     }
 
     .breadcrumb {
@@ -213,46 +200,37 @@
         flex-wrap: wrap;
         align-items: center;
         gap: 0.35rem;
-        border: 1px solid var(--line);
-        background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
-        box-shadow: inset 0 1px 0 var(--bevel);
-        padding: 0.3rem 0.6rem;
-        font-size: 11px;
+        padding: 0.25rem 0;
+        font-size: 12px;
         color: var(--subtle);
     }
 
     .breadcrumb a {
-        font-weight: 700;
         color: var(--muted);
     }
 
     .breadcrumb a:hover {
         color: var(--accent);
-        text-decoration: underline;
     }
 
     /* --- surfaces -------------------------------------------------------- */
 
-    /* Double bevel: black outer edge, light inner edge. */
     .panel {
         position: relative;
-        border: 1px solid var(--line);
-        background-color: var(--surface-1);
-        box-shadow:
-            inset 0 0 0 1px var(--bevel),
-            0 1px 3px var(--shade);
+        border-radius: 2px;
+        background-image: linear-gradient(to bottom, var(--surface-2), var(--surface-1) 60%);
+        box-shadow: inset 0 1px 0 var(--bevel), 0 1px 2px var(--shade);
     }
 
     .panel-flush {
         overflow: hidden;
     }
 
-    /* Amber rule across the top, the way a highlighted box was marked. */
+    /* Highlight rail on the panels that matter (records, the live feed). */
     .bracket {
-        border-top: 2px solid var(--accent);
+        box-shadow: inset 0 2px 0 var(--accent), inset 0 1px 0 var(--bevel), 0 1px 2px var(--shade);
     }
 
-    /* The classic gradient title bar. */
     .panel-header {
         display: flex;
         align-items: center;
@@ -260,8 +238,7 @@
         gap: 1rem;
         border-bottom: 1px solid var(--line);
         background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
-        box-shadow: inset 0 1px 0 var(--bevel);
-        padding: 0.45rem 0.7rem;
+        padding: 0.5rem 0.8rem;
     }
 
     .hud-label {
@@ -270,39 +247,21 @@
         gap: 0.4rem;
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--accent);
-        text-shadow: 0 1px 0 var(--shade);
-    }
-
-    .hud-label::before {
-        content: '»';
-        font-size: 11px;
-        line-height: 1;
-        opacity: 0.8;
-    }
-
-    /* Dotted list of links, the sidebar staple. */
-    .dot-list > * + * {
-        border-top: 1px dotted var(--line-strong);
-    }
-
-    .dot-list > * {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        padding: 0.3rem 0;
     }
 
     .display-xl {
-        font-size: clamp(1.6rem, 1rem + 2.4vw, 2.5rem);
-        font-weight: 700;
-        line-height: 1.05;
+        font-size: clamp(1.7rem, 1.1rem + 2.4vw, 2.6rem);
+        font-weight: 300;
+        line-height: 1.1;
         letter-spacing: 0.01em;
-        text-transform: uppercase;
-        text-shadow: 0 2px 0 var(--shade);
+        color: #fff;
+    }
+
+    :root:not(.dark) .display-xl {
+        color: var(--ink);
     }
 
     /* --- navigation ------------------------------------------------------ */
@@ -311,73 +270,82 @@
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        border-right: 1px solid var(--line);
-        border-left: 1px solid transparent;
-        padding: 0.5rem 0.85rem;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
+        padding: 0.6rem 0.9rem;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--muted);
-        text-shadow: 0 1px 0 var(--shade);
+        transition: color 120ms ease, background-color 120ms ease;
     }
 
     .nav-link:hover {
-        color: var(--ink);
-        background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
+        color: #fff;
+        background-color: var(--accent-soft);
     }
 
     .nav-link.is-active {
         color: var(--accent);
-        background-image: linear-gradient(to bottom, var(--surface-3), var(--surface-2));
-        box-shadow: inset 0 2px 0 var(--accent), inset 0 -1px 0 var(--shade);
+        background-color: var(--accent-soft);
+        box-shadow: inset 0 -2px 0 var(--accent);
     }
 
-    /* Sidebar link list. */
     .side-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
         border-bottom: 1px solid var(--line);
-        padding: 0.3rem 0.6rem;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
+        padding: 0.4rem 0.7rem;
+        font-size: 12px;
         color: var(--muted);
-        text-shadow: 0 1px 0 var(--shade);
     }
 
     .side-link:last-child {
         border-bottom: 0;
     }
 
-    .side-link::before {
-        content: '» ';
+    .side-link:hover {
+        background-color: var(--accent-soft);
         color: var(--accent);
     }
 
-    .side-link:hover {
-        background-color: var(--surface-2);
-        color: var(--ink);
-    }
-
     .side-link.is-active {
-        background-image: linear-gradient(to bottom, var(--surface-3), var(--surface-2));
+        background-color: var(--accent-soft);
         box-shadow: inset 2px 0 0 var(--accent);
         color: var(--accent);
     }
 
-    /* Player-slot meter, the thing every server listing had. */
-    .slots {
-        display: block;
-        height: 7px;
-        border: 1px solid var(--line);
-        background-color: var(--surface-3);
-        box-shadow: inset 0 1px 2px var(--shade);
+    /* Steam-style tab strip. */
+    .tabs {
+        display: flex;
+        overflow-x: auto;
+        border-bottom: 1px solid var(--line);
+        background-color: color-mix(in oklab, var(--surface-0) 55%, transparent);
     }
 
-    .slots-fill {
-        display: block;
-        height: 100%;
-        background-image: linear-gradient(to bottom, #b6f05c, var(--live));
+    .tab {
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 0.4rem;
+        border-right: 1px solid var(--line);
+        padding: 0.5rem 0.9rem;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        cursor: pointer;
+    }
+
+    .tab:hover {
+        color: #fff;
+        background-color: var(--accent-soft);
+    }
+
+    .tab.is-active {
+        background-image: linear-gradient(to bottom, var(--surface-3), var(--surface-2));
+        box-shadow: inset 0 -2px 0 var(--accent);
+        color: var(--accent);
     }
 
     /* --- controls -------------------------------------------------------- */
@@ -387,65 +355,74 @@
         cursor: pointer;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
-        border: 1px solid var(--line);
-        background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
-        box-shadow: inset 0 1px 0 var(--bevel);
-        padding: 0.35rem 0.8rem;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        line-height: 1.25rem;
-        text-transform: uppercase;
-        text-shadow: 0 1px 0 var(--shade);
+        gap: 0.4rem;
+        border-radius: 2px;
+        background-image: linear-gradient(to bottom, #3d6f92, #2a4f6b);
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
+        padding: 0.35rem 0.85rem;
+        font-size: 12px;
+        letter-spacing: 0.03em;
+        line-height: 1.3rem;
         white-space: nowrap;
-        color: var(--ink);
+        color: #d8e6f2;
     }
 
     .btn:hover {
-        filter: brightness(1.15);
-    }
-
-    .btn:active {
-        box-shadow: inset 0 2px 3px var(--shade);
+        background-image: linear-gradient(to bottom, #4d87b0, #356183);
+        color: #fff;
     }
 
     .btn:focus-visible {
-        outline: 1px dotted var(--accent);
+        outline: 1px solid var(--accent);
         outline-offset: 2px;
     }
 
     .btn-sm {
-        padding: 0.1rem 0.45rem;
-        font-size: 10px;
-        line-height: 1rem;
+        padding: 0.1rem 0.5rem;
+        font-size: 11px;
+        line-height: 1.1rem;
     }
 
+    /* The green call-to-action, straight off a Steam store page. */
     .btn-primary {
-        border-color: #7a4300;
-        background-image: linear-gradient(to bottom, #ffb143, var(--accent));
-        color: #2a1a02;
-        text-shadow: 0 1px 0 rgb(255 255 255 / 0.25);
+        background-image: linear-gradient(to bottom, #a4d007, #536904);
+        color: #d2efa9;
+    }
+
+    .btn-primary:hover {
+        background-image: linear-gradient(to bottom, #b6e60a, #63800a);
+        color: #fff;
     }
 
     .btn-ghost {
-        color: var(--ink);
+        background-image: none;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+    }
+
+    .btn-ghost:hover {
+        background-image: none;
+        border-color: var(--accent);
+        color: var(--accent);
     }
 
     .btn-danger {
-        border-color: #6d1c18;
-        background-image: linear-gradient(to bottom, #e46b64, #a82d26);
+        background-image: linear-gradient(to bottom, #d94a42, #8c2b25);
+        color: #ffdedc;
+    }
+
+    .btn-danger:hover {
+        background-image: linear-gradient(to bottom, #e8615a, #a3332c);
         color: #fff;
-        text-shadow: 0 1px 0 rgb(0 0 0 / 0.4);
     }
 
     .input {
         width: 100%;
         border: 1px solid var(--line);
-        background-color: var(--surface-2);
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 70%, transparent);
         box-shadow: inset 0 1px 3px var(--shade);
-        padding: 0.35rem 0.55rem;
-        font-family: var(--font-sans);
+        padding: 0.35rem 0.6rem;
         font-size: 12px;
         color: var(--ink);
     }
@@ -471,31 +448,27 @@
     .data-table thead th {
         border-bottom: 1px solid var(--line);
         background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
-        box-shadow: inset 0 1px 0 var(--bevel);
         padding: 0.4rem 0.7rem;
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--muted);
-        text-shadow: 0 1px 0 var(--shade);
         white-space: nowrap;
     }
 
     .data-table tbody td {
-        border-bottom: 1px solid var(--line);
-        padding: 0.35rem 0.7rem;
+        border-bottom: 1px solid color-mix(in oklab, var(--line) 60%, transparent);
+        padding: 0.4rem 0.7rem;
         vertical-align: middle;
-    }
-
-    /* Zebra striping, as mandatory then as it is dated now. */
-    .data-table tbody tr:nth-child(even) {
-        background-color: var(--stripe);
     }
 
     .data-table tbody tr:hover {
         background-color: var(--accent-soft);
-        box-shadow: inset 2px 0 0 var(--accent);
+    }
+
+    .data-table tbody tr.is-record {
+        background-color: color-mix(in oklab, var(--gold) 8%, transparent);
     }
 
     .data-table th.sortable {
@@ -513,71 +486,102 @@
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        border: 1px solid var(--line);
-        background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
-        padding: 0 0.35rem;
-        font-size: 10px;
-        font-weight: 700;
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 60%, transparent);
+        padding: 0.05rem 0.4rem;
+        font-size: 11px;
         letter-spacing: 0.04em;
-        text-transform: uppercase;
         color: var(--muted);
-        text-shadow: 0 1px 0 var(--shade);
     }
 
     .pill-accent {
-        border-color: #7a4300;
-        background-image: linear-gradient(to bottom, #ffb143, var(--accent));
-        color: #2a1a02;
-        text-shadow: none;
+        background-color: var(--accent-soft);
+        color: var(--accent);
+    }
+
+    /* A rule chip: label on the left in the dimmer tone, value in the brighter. */
+    .rule {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 60%, transparent);
+        padding: 0.05rem 0.45rem;
+        font-size: 11px;
+    }
+
+    .rule dt {
+        color: var(--subtle);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .rule dd {
+        font-family: var(--font-mono);
+        color: var(--ink);
     }
 
     .rank {
         display: inline-flex;
-        min-width: 2.1rem;
+        min-width: 2.2rem;
         align-items: center;
         justify-content: center;
         gap: 0.2rem;
-        border: 1px solid var(--line);
-        background-color: var(--surface-2);
-        padding: 0 0.3rem;
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 60%, transparent);
+        padding: 0.05rem 0.35rem;
         font-family: var(--font-mono);
         font-size: 11px;
-        font-weight: 700;
         color: var(--muted);
     }
 
     .rank-1 {
-        border-color: #8a6a00;
-        background-image: linear-gradient(to bottom, #ffe38a, var(--gold));
-        color: #3a2a00;
+        background-color: color-mix(in oklab, var(--gold) 22%, transparent);
+        color: var(--gold);
     }
 
     .rank-2 {
-        border-color: #6f6f6f;
-        background-image: linear-gradient(to bottom, #ededed, var(--silver));
-        color: #2c2c2c;
+        background-color: color-mix(in oklab, var(--silver) 20%, transparent);
+        color: var(--silver);
     }
 
     .rank-3 {
-        border-color: #7a4a1c;
-        background-image: linear-gradient(to bottom, #e6a76b, var(--bronze));
-        color: #2e1a08;
+        background-color: color-mix(in oklab, var(--bronze) 22%, transparent);
+        color: var(--bronze);
     }
 
     .time {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
-        font-weight: 700;
         color: var(--ink);
     }
 
     .time-lg {
-        font-size: 13px;
+        font-size: 15px;
+    }
+
+    .time-hero {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: clamp(2rem, 1.4rem + 2vw, 2.8rem);
+        line-height: 1;
+        color: #fff;
+    }
+
+    /* Gap to the record: never green, because slower is the only option. */
+    .delta {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 11px;
+        color: var(--subtle);
+    }
+
+    .delta-record {
+        color: var(--gold);
     }
 
     .link {
         color: var(--accent);
-        font-weight: 700;
     }
 
     .link:hover {
@@ -589,45 +593,76 @@
         display: inline-block;
         width: 8px;
         height: 8px;
-        border: 1px solid var(--line);
+        border-radius: 999px;
         background-color: var(--subtle);
     }
 
     .dot-live {
-        background-image: linear-gradient(to bottom, #b6f05c, var(--live));
-        border-color: #3f6b16;
+        background-color: var(--live);
     }
 
-    /* Paginator */
+    .slots {
+        display: block;
+        height: 6px;
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 75%, transparent);
+        box-shadow: inset 0 1px 2px var(--shade);
+    }
+
+    .slots-fill {
+        display: block;
+        height: 100%;
+        border-radius: 2px;
+        background-image: linear-gradient(to bottom, #a4d007, #6d8c05);
+    }
+
+    /* Horizontal bar used for rank distribution on the profile. */
+    .meter {
+        display: block;
+        height: 4px;
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 75%, transparent);
+    }
+
+    .meter-fill {
+        display: block;
+        height: 100%;
+        border-radius: 2px;
+        background-color: var(--accent);
+    }
+
     .pagination a,
+    .pagination button,
     .pagination span {
         display: inline-flex;
-        min-width: 1.8rem;
+        min-width: 1.9rem;
         align-items: center;
         justify-content: center;
-        border: 1px solid var(--line);
-        background-image: linear-gradient(to bottom, var(--head-top), var(--head-bottom));
-        padding: 0.15rem 0.4rem;
+        border-radius: 2px;
+        background-color: color-mix(in oklab, var(--surface-0) 60%, transparent);
+        padding: 0.2rem 0.45rem;
+        font-family: var(--font-mono);
         font-size: 11px;
-        font-weight: 700;
         color: var(--muted);
-        text-shadow: 0 1px 0 var(--shade);
     }
 
-    .pagination a:hover {
+    .pagination a:hover,
+    .pagination button:hover {
+        background-color: var(--accent-soft);
         color: var(--accent);
-        filter: brightness(1.15);
     }
 
     .pagination .is-current {
-        border-color: #7a4300;
-        background-image: linear-gradient(to bottom, #ffb143, var(--accent));
-        color: #2a1a02;
-        text-shadow: none;
+        background-color: var(--accent-soft);
+        color: var(--accent);
+    }
+
+    .pagination button {
+        cursor: pointer;
     }
 
     .pagination .is-disabled {
-        opacity: 0.45;
+        opacity: 0.4;
     }
 }
 

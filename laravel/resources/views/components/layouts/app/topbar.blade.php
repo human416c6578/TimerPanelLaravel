@@ -1,25 +1,25 @@
 @php
     $links = [
-        ['label' => 'Home', 'route' => 'home', 'active' => 'home'],
-        ['label' => 'Ranks', 'route' => 'leaderboard.index', 'active' => 'leaderboard.*'],
-        ['label' => 'Maps', 'route' => 'maps.index', 'active' => 'maps.*'],
-        ['label' => 'Players', 'route' => 'players.index', 'active' => 'players.*'],
-        ['label' => 'Replays', 'route' => 'replays.index', 'active' => 'replays.*'],
+        ['label' => 'Home', 'route' => 'home', 'active' => 'home', 'icon' => 'home'],
+        ['label' => 'Ranks', 'route' => 'leaderboard.index', 'active' => 'leaderboard.*', 'icon' => 'trophy'],
+        ['label' => 'Maps', 'route' => 'maps.index', 'active' => 'maps.*', 'icon' => 'map'],
+        ['label' => 'Players', 'route' => 'players.index', 'active' => 'players.*', 'icon' => 'users'],
+        ['label' => 'Replays', 'route' => 'replays.index', 'active' => 'replays.*', 'icon' => 'play'],
     ];
 @endphp
 
-<header x-data="{ open: false }" class="border-b-2 border-accent bg-surface-1">
-    {{-- Masthead --}}
-    <div class="border-b border-line bg-gradient-to-b from-[var(--head-top)] to-[var(--head-bottom)]">
+<header x-data="{ open: false }" class="bg-surface-0">
+    {{-- Masthead: the near-black Steam chrome --}}
+    <div class="border-b border-black bg-[#171a21]">
         <div class="flex items-center gap-3 px-3 py-2">
             <a href="{{ route('home') }}" class="flex items-center gap-2">
                 <x-app-logo-icon class="size-8 text-accent" />
-                <span class="text-base font-bold uppercase tracking-[0.12em] [text-shadow:0_1px_0_var(--shade)]">
+                <span class="text-base uppercase tracking-[0.2em] text-white">
                     Timer<span class="text-accent">Panel</span>
                 </span>
             </a>
 
-            <span class="ms-1 hidden text-[11px] text-subtle sm:inline">cs 1.6 &middot; bhop &amp; deathrun timer</span>
+            <span class="ms-1 hidden text-[11px] uppercase tracking-widest text-subtle sm:inline">bhop &amp; deathrun timer</span>
 
             <div class="ms-auto flex items-center gap-1.5">
                 <button
@@ -65,12 +65,13 @@
     </div>
 
     {{-- Nav strip --}}
-    <div class="bg-surface-2">
+    <div class="border-b border-black bg-surface-2">
         <div class="flex items-center px-3">
             <nav class="hidden border-s border-line lg:flex">
                 @foreach ($links as $link)
                     <a href="{{ route($link['route']) }}"
                        @class(['nav-link', 'is-active' => request()->routeIs($link['active'])])>
+                        <x-icon :name="$link['icon']" class="size-3.5" />
                         {{ $link['label'] }}
                     </a>
                 @endforeach
@@ -83,7 +84,7 @@
             @auth
                 <a href="{{ route('dashboard') }}"
                    @class(['nav-link ms-auto border-s', 'is-active' => request()->routeIs('dashboard')])>
-                    Admin
+                    <x-icon name="shield" class="size-3.5" /> Admin
                 </a>
             @endauth
         </div>
@@ -94,6 +95,7 @@
             @foreach ($links as $link)
                 <a href="{{ route($link['route']) }}"
                    @class(['nav-link border-b border-line', 'is-active' => request()->routeIs($link['active'])])>
+                    <x-icon :name="$link['icon']" class="size-3.5" />
                     {{ $link['label'] }}
                 </a>
             @endforeach

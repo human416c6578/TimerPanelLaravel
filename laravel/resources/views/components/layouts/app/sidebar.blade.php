@@ -1,10 +1,10 @@
 @php
     $links = [
-        ['label' => 'Home', 'route' => 'home', 'active' => 'home'],
-        ['label' => 'Rankings', 'route' => 'leaderboard.index', 'active' => 'leaderboard.*'],
-        ['label' => 'Maps', 'route' => 'maps.index', 'active' => 'maps.*'],
-        ['label' => 'Players', 'route' => 'players.index', 'active' => 'players.*'],
-        ['label' => 'Replays', 'route' => 'replays.index', 'active' => 'replays.*'],
+        ['label' => 'Home', 'route' => 'home', 'active' => 'home', 'icon' => 'home'],
+        ['label' => 'Rankings', 'route' => 'leaderboard.index', 'active' => 'leaderboard.*', 'icon' => 'trophy'],
+        ['label' => 'Maps', 'route' => 'maps.index', 'active' => 'maps.*', 'icon' => 'map'],
+        ['label' => 'Players', 'route' => 'players.index', 'active' => 'players.*', 'icon' => 'users'],
+        ['label' => 'Replays', 'route' => 'replays.index', 'active' => 'replays.*', 'icon' => 'play'],
     ];
 
     $online = collect($liveServers ?? [])->where('online', true);
@@ -14,18 +14,20 @@
 <aside class="space-y-2">
     {{-- Section nav --}}
     <section class="panel panel-flush">
-        <header class="panel-header"><p class="hud-label">Navigation</p></header>
+        <header class="panel-header"><p class="hud-label">Browse</p></header>
 
         <nav class="flex flex-col">
             @foreach ($links as $link)
                 <a href="{{ route($link['route']) }}"
                    @class(['side-link', 'is-active' => request()->routeIs($link['active'])])>
+                    <x-icon :name="$link['icon']" class="size-3.5" />
                     {{ $link['label'] }}
                 </a>
             @endforeach
 
             @auth
                 <a href="{{ route('dashboard') }}" @class(['side-link', 'is-active' => request()->routeIs('dashboard')])>
+                    <x-icon name="shield" class="size-3.5" />
                     Admin panel
                 </a>
             @endauth
@@ -35,7 +37,7 @@
     {{-- Live servers, GameTracker style: slot bar, current map, connect --}}
     <section class="panel panel-flush">
         <header class="panel-header">
-            <p class="hud-label">Servers</p>
+            <p class="hud-label"><x-icon name="server" class="size-3.5" /> Servers</p>
             <span class="text-[11px] font-bold tabular {{ $online->isEmpty() ? 'text-subtle' : 'text-live' }}">
                 {{ $playersOnline }} online
             </span>
@@ -82,7 +84,7 @@
 
     {{-- Search --}}
     <section class="panel panel-flush">
-        <header class="panel-header"><p class="hud-label">Find a player</p></header>
+        <header class="panel-header"><p class="hud-label"><x-icon name="search" class="size-3.5" /> Find a player</p></header>
 
         <form method="GET" action="{{ route('players.index') }}" class="flex gap-1 p-2">
             <input type="search" name="search" placeholder="name or steam id" class="input" autocomplete="off">
