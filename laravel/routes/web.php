@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\MapImageController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PlayerVersusController;
 use App\Http\Controllers\ReplayController;
@@ -19,6 +20,7 @@ Route::delete('/players/{uuid}/times', [PlayerController::class, 'deleteUserRank
 
 Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
 Route::get('/maps/{uuid}', [MapController::class, 'show'])->name('maps.show');
+Route::get('/map-images/{name}', [MapImageController::class, 'show'])->middleware('throttle:120,1')->name('maps.image');
 Route::delete('/maps/{uuid}/time', [MapController::class, 'deleteMapRankedTime'])
     ->name('maps.delete.time');
 

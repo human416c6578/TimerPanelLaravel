@@ -70,3 +70,33 @@ Every pull request and every push to `main` or `develop` builds the image,
 runs Pint and Pest **inside** it, builds the production target and boots it to
 check that `/up` answers. Tests that need the game database skip themselves,
 so CI needs no database at all.
+
+## Performance
+
+Every list is read a page at a time: the page is cut in SQL (`ORDER BY … LIMIT …
+OFFSET …`) before anything is joined, so the game database only looks up the
+dozen rows on screen. Filters run in that same query, and pages and totals are
+cached for a minute or two.
+
+That only pays off if the game database has the right indexes. On 60,000
+players and 250,000 runs the latest-runs page went from 857 ms to 0.8 ms and a
+player profile from 1.2 s to 9 ms. [`docs/game-db-indexes.sql`](docs/game-db-indexes.sql)
+lists them, with the numbers. The panel does not create them: it never changes
+the game database.
+
+## Map pictures
+
+A map's picture is downloaded once, checked to be a real image, and kept on this
+server; nothing is hot-linked. Where they come from is `MAP_IMAGE_SOURCES` in
+`.env`: URL templates with `{map}`, tried in order (the default is gametracker.com's
+CS 1.6 folder, then gametracker.rs, then its Source-game folders). A map with no
+picture keeps a generated cover in its own colour.
+
+```bash
+docker compose exec app php artisan maps:fetch-images   # fetch them all now, politely
+```
+
+Some sources answer 200 with a "no picture" image for any name; those are refused by
+their hash (`MAP_IMAGE_REJECT_HASHES`, gametracker.rs's is built in). For a map no
+source has, an admin can upload one from the dashboard, or drop `<map>.jpg` into
+`storage/app/private/map-images/`.

@@ -83,3 +83,17 @@ test('it pages through long histories', function () {
         ->call('gotoPage', 3)
         ->assertSee('31–40 of 40');
 });
+
+test('only records get a Watch button', function () {
+    records()
+        ->assertSeeHtml('/runs/m1/1/u1?tab=replay')
+        ->assertDontSeeHtml('/runs/m2/1/u1?tab=replay');
+});
+
+test('records only leaves just the records', function () {
+    records()
+        ->set('recordsOnly', true)
+        ->assertSee('bhop_arcane')
+        ->assertDontSee('bhop_eazy')
+        ->assertDontSee('deathrun_castle');
+});

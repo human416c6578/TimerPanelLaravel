@@ -33,3 +33,19 @@ test('the gap to a record', function (int|string|null $ms, string $expected) {
     'over a minute' => [62310, '+01:02.310'],
     'unknown' => [null, '—'],
 ]);
+
+test('how long ago is as short as it can be', function (int $seconds, string $expected) {
+    expect(TimeFormat::age($seconds))->toBe($expected);
+})->with([
+    'moments' => [12, 'just now'],
+    'minutes' => [12 * 60 + 5, '12m ago'],
+    'an hour' => [3600, '1h ago'],
+    'hours' => [3 * 3600 + 1800, '3h ago'],
+    'a day' => [86400, '1d ago'],
+    'days' => [5 * 86400, '5d ago'],
+    'never negative' => [-30, 'just now'],
+]);
+
+test('an unknown age is a dash', function () {
+    expect(TimeFormat::age(null))->toBe('—');
+});

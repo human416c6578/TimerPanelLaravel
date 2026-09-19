@@ -12,10 +12,14 @@
             autocomplete="off"
             class="input"
         >
+
+        <button type="button" wire:click="$toggle('recordsOnly')" @class(['btn btn-sm shrink-0', 'btn-primary' => $recordsOnly, 'btn-ghost' => ! $recordsOnly])>
+            <x-icon name="crown" class="size-3" /> Records
+        </button>
     </div>
 
     <x-ui.panel flush>
-        <x-ui.table min="640px">
+        <x-ui.table min="720px">
             <thead>
                 <tr>
                     <x-ui.sort-th column="rank" :sort="$sort" :direction="$direction" label="Rank" class="w-20" />
@@ -25,6 +29,7 @@
                     <x-ui.sort-th column="delta" :sort="$sort" :direction="$direction" label="Gap to WR" align="right" />
                     <x-ui.sort-th column="sync" :sort="$sort" :direction="$direction" label="Sync" align="right" class="hidden sm:table-cell" />
                     <x-ui.sort-th column="date" :sort="$sort" :direction="$direction" label="Date" class="hidden md:table-cell" />
+                    <th class="w-12"></th>
                 </tr>
             </thead>
             <tbody>
@@ -53,9 +58,14 @@
                             {{ $run->Sync === null ? '—' : number_format((float) $run->Sync, 1).'%' }}
                         </td>
                         <td class="hidden font-mono text-[11px] text-subtle md:table-cell">{{ $run->RecordDate }}</td>
+                        <td class="text-right">
+                            @if ($isRecord)
+                                <x-ui.play-button :href="route('runs.show', [$run->MapUUID, $run->CategoryId, $userUuid]).'?tab=replay'" />
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <x-ui.empty :colspan="7" message="No records match that filter." />
+                    <x-ui.empty :colspan="8" message="No records match that filter." />
                 @endforelse
             </tbody>
         </x-ui.table>

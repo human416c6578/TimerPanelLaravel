@@ -24,6 +24,9 @@ class PlayerRecords extends Component
     #[Url(as: 'q', except: '')]
     public string $search = '';
 
+    #[Url(except: false)]
+    public bool $recordsOnly = false;
+
     #[Url(except: 'date')]
     public string $sort = 'date';
 
@@ -48,6 +51,11 @@ class PlayerRecords extends Component
     }
 
     public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedRecordsOnly(): void
     {
         $this->resetPage();
     }
@@ -78,6 +86,10 @@ class PlayerRecords extends Component
         if ($search !== '') {
             $runs = $runs->filter(fn ($run) => str_contains(mb_strtolower($run->MapName), $search)
                 || str_contains(mb_strtolower($run->CategoryName), $search));
+        }
+
+        if ($this->recordsOnly) {
+            $runs = $runs->filter(fn ($run) => (int) $run->Rank === 1);
         }
 
         $property = self::SORTS[$this->sort] ?? 'RecordDate';

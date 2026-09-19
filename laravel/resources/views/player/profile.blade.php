@@ -107,7 +107,7 @@
                 {{-- OVERVIEW --}}
                 <div x-show="tab === 'overview'" class="space-y-3">
                     <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <div class="panel p-4 meter-gold sm:col-span-2 xl:col-span-1">
+                        <div class="panel fx-lift p-4 meter-gold sm:col-span-2 xl:col-span-1">
                             <p class="hud-label"><x-icon name="crown" class="size-3.5 text-gold" /> World records</p>
                             <p class="hero-figure mt-3">{{ number_format($insights['records']) }}</p>
                             <span class="meter mt-4"><span class="meter-fill" style="width: {{ $share($insights['records']) }}%"></span></span>
@@ -118,7 +118,7 @@
                             ['Podiums', 'medal', $insights['podiums'], 'Top three'],
                             ['Top 10', 'target', $insights['top10'], 'Top ten'],
                         ] as [$label, $icon, $count, $hint])
-                            <div class="panel p-4">
+                            <div class="panel fx-lift p-4">
                                 <p class="hud-label"><x-icon :name="$icon" class="size-3.5" /> {{ $label }}</p>
                                 <p class="big-figure mt-3">{{ number_format($count) }}</p>
                                 <span class="meter mt-4"><span class="meter-fill" style="width: {{ $share($count) }}%"></span></span>
@@ -126,7 +126,7 @@
                             </div>
                         @endforeach
 
-                        <div class="panel p-4">
+                        <div class="panel fx-lift p-4">
                             <p class="hud-label"><x-icon name="gauge" class="size-3.5" /> Typical position</p>
                             <p class="big-figure mt-3">{{ $typical === null ? '—' : 'Top '.max(1, round($typical * 100)).'%' }}</p>
                             <span class="meter mt-4"><span class="meter-fill" style="width: {{ $typical === null ? 0 : round((1 - $typical) * 100) }}%"></span></span>
@@ -158,6 +158,29 @@
                             @endif
                         </div>
                     </section>
+
+                    {{-- The records they hold, each with its replay --}}
+                    @if ($insights['held']->isNotEmpty())
+                        <section class="panel panel-flush">
+                            <header class="panel-header">
+                                <p class="hud-label"><x-icon name="crown" class="size-3.5 text-gold" /> World records held</p>
+                                <button type="button" class="text-[12px] font-semibold text-muted hover:text-accent" x-on:click="tab = 'records'">All records</button>
+                            </header>
+
+                            <div class="divide-y divide-line">
+                                @foreach ($insights['held'] as $held)
+                                    <div class="flex items-center gap-3 px-4 py-2.5">
+                                        <span class="min-w-0 flex-1">
+                                            <a href="{{ route('maps.show', $held->MapUUID) }}?category={{ $held->CategoryId }}" class="block truncate font-semibold hover:text-accent">{{ $held->MapName }}</a>
+                                            <span class="block truncate text-[11px] text-subtle">{{ $held->CategoryName }} · {{ $held->RecordDate }}</span>
+                                        </span>
+                                        <span class="time time-lg">{{ TimeFormat::runtime($held->Time) }}</span>
+                                        <x-ui.play-button :href="route('runs.show', [$held->MapUUID, $held->CategoryId, $user->uuid]).'?tab=replay'" />
+                                    </div>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
 
                     <div class="grid gap-3 lg:grid-cols-2">
                         {{-- Categories --}}

@@ -32,9 +32,7 @@
                         <td><a href="{{ route('players.show', $replay->user_uuid) }}" class="link">{{ $replay->user_name }}</a></td>
                         <td class="time text-right text-gold">@runtime($replay->time)</td>
                         <td class="text-right">
-                            <a href="{{ route('runs.show', [$replay->map_uuid, $replay->category_id, $replay->user_uuid]) }}" class="btn btn-primary btn-sm">
-                                <x-icon name="play" class="size-3" /> Watch
-                            </a>
+                            <x-ui.play-button :href="route('runs.show', [$replay->map_uuid, $replay->category_id, $replay->user_uuid]).'?tab=replay'" />
                         </td>
                     </tr>
                 @empty

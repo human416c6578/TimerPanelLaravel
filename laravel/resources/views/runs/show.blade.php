@@ -22,15 +22,17 @@
     $stat = fn ($value, $decimals = 0, $suffix = '') => $value === null ? '—' : number_format((float) $value, $decimals).$suffix;
     $tiles = [
         ['gauge', 'Sync', $stat($run->sync, 1, '%')],
-        ['zap', 'Start speed', $stat($run->start_speed)],
+        ['zap', 'Start speed', $run->start_speed === null ? '—' : number_format((float) $run->start_speed).' ups'],
         ['flame', 'Jumps', $stat($run->jumps)],
         ['target', 'Strafes', $stat($run->strafes)],
         ['compare', 'Overlaps', $stat($run->overlaps).($run->overlaps_sd !== null ? ' ±'.number_format((float) $run->overlaps_sd, 2) : '')],
     ];
 @endphp
 
+@php($initialTab = request('tab') === 'replay' && $hasReplay ? 'replay' : 'scoreboard')
+
 <x-layouts.app :title="$map->name.' · '.$categoryName">
-    <div class="space-y-3" x-data="{ tab: 'scoreboard' }">
+    <div class="space-y-3" x-data="{ tab: '{{ $initialTab }}' }">
         <x-ui.breadcrumb :trail="[
             'Maps' => route('maps.index'),
             $map->name => route('maps.show', $map->uuid).'?category='.$categoryId,
@@ -133,7 +135,7 @@
                         <th class="text-right">Sync</th>
                         <th class="hidden text-right sm:table-cell">Strafes</th>
                         <th class="hidden text-right sm:table-cell">Jumps</th>
-                        <th class="hidden text-right md:table-cell">Start</th>
+                        <th class="hidden text-right md:table-cell">Start (ups)</th>
                     </tr>
                 </thead>
                 <tbody>

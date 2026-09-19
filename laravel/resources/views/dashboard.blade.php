@@ -95,6 +95,8 @@
                     </div>
                 </x-ui.panel>
 
+                <livewire:map-image-upload />
+
                 <x-ui.panel eyebrow="Moderation" flush>
                     <div class="grid gap-2 p-3 text-sm">
                         <a href="{{ route('players.index') }}" class="btn btn-ghost justify-start">Find player times</a>

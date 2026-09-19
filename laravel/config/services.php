@@ -28,6 +28,12 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
+    'steam' => [
+        // Read here, never with env() in application code: the production image
+        // caches its config, and env() returns null once it does.
+        'key' => env('STEAM_API_KEY'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

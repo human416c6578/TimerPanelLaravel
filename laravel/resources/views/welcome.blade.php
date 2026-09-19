@@ -59,7 +59,7 @@
                 <div class="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
                     @foreach ($records as $record)
                         <a href="{{ route('runs.show', [$record->map_uuid, $record->category_id, $record->user_uuid]) }}"
-                           class="group w-56 shrink-0 overflow-hidden rounded-[10px] border border-line bg-surface-1 hover:border-line-strong">
+                           class="group fx-lift fx-shine w-56 shrink-0 overflow-hidden rounded-[10px] border border-line bg-surface-1">
                             <x-cover :name="$record->map_name" class="h-16 px-3 py-2">
                                 <p class="truncate text-[13px] font-bold text-white">{{ $record->map_name }}</p>
                                 <p class="text-[11px] text-white/70">{{ $record->category_name }}</p>
@@ -78,53 +78,8 @@
         @endif
 
         <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_19rem]">
-            {{-- Feed --}}
-            <x-ui.panel flush>
-                <header class="panel-header">
-                    <p class="hud-label"><x-icon name="flame" class="size-3.5" /> Latest runs <span class="pill ms-1">24h</span></p>
-                    <p class="text-[11px] text-subtle">{{ number_format($homeStats['recent_records']) }} runs · {{ number_format($homeStats['active_players']) }} players</p>
-                </header>
-
-                <x-ui.table min="600px">
-                    <thead>
-                        <tr>
-                            <th class="w-20">Rank</th>
-                            <th>Player</th>
-                            <th>Map</th>
-                            <th class="text-right">Time</th>
-                            <th class="text-right">Gap</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($latestTimes as $record)
-                            @php($isRecord = (int) $record->rank === 1)
-
-                            <tr @class(['is-record' => $isRecord])>
-                                <td>
-                                    @if ($isRecord)
-                                        <span class="rank rank-1"><x-icon name="crown" class="size-3" /> WR</span>
-                                    @else
-                                        <x-ui.rank :rank="$record->rank" />
-                                    @endif
-                                </td>
-                                <td><a href="{{ route('players.show', $record->user_uuid) }}" class="link">{{ $record->user_name }}</a></td>
-                                <td>
-                                    <a href="{{ route('maps.show', $record->map_uuid) }}" class="text-ink hover:text-accent">{{ $record->map_name }}</a>
-                                    <span class="ms-1 text-[11px] text-subtle">{{ $record->category_name }}</span>
-                                </td>
-                                <td class="time time-lg text-right">
-                                    <a href="{{ route('runs.show', [$record->map_uuid, $record->category_id, $record->user_uuid]) }}" class="hover:text-accent">{{ TimeFormat::runtime($record->time) }}</a>
-                                </td>
-                                <td @class(['delta text-right', 'delta-record' => $isRecord])>
-                                    {{ TimeFormat::delta($record->best_time !== null ? (int) $record->time - (int) $record->best_time : null) }}
-                                </td>
-                            </tr>
-                        @empty
-                            <x-ui.empty :colspan="5" message="No runs in the last 24 hours." />
-                        @endforelse
-                    </tbody>
-                </x-ui.table>
-            </x-ui.panel>
+            {{-- The feed: paged and filtered in the query --}}
+            <livewire:latest-runs-feed />
 
             <aside class="space-y-4">
                 {{-- Close calls --}}

@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Services\CategoryRules;
 use App\Services\MapLeaderboards;
+use App\Services\SteamAvatars;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -177,6 +178,13 @@ class MapLeaderboard extends Component
         })->values();
 
         return $this->all || $this->sort !== 'rank' ? $sorted : $sorted->take(15);
+    }
+
+    /** @return array<string, string> auth_id => Steam picture, for the rows on screen */
+    #[Computed]
+    public function avatars(): array
+    {
+        return app(SteamAvatars::class)->small($this->records->pluck('auth_id')->unique());
     }
 
     /** @return Collection<int, object> the runs picked for the head-to-head, in pick order */

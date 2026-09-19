@@ -7,12 +7,12 @@ use App\Models\PlayedTime;
 use App\Models\PlayedTimeInfo;
 use App\Models\Time;
 use App\Services\PlayerProfile;
+use App\Services\SteamAvatars;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class PlayerController extends Controller
 {
@@ -21,37 +21,17 @@ class PlayerController extends Controller
         return view('player.list', ['search' => trim((string) $request->input('search', ''))]);
     }
 
-    public function profile(Request $request, $uuid, PlayerProfile $profile)
+    public function profile(Request $request, $uuid, PlayerProfile $profile, SteamAvatars $avatars)
     {
         $user = GameUser::select('uuid', 'name', 'auth_id', 'nationality')->where('uuid', $uuid)->firstOrFail();
 
         $authId = $user->auth_id;
 
-        $steamId64 = $this->convertToSteamID64($authId);
-
-        $steamAvatar = null;
-        if ($steamId64) {
-            $steamAvatar = Cache::remember(
-                "steam_profile_{$steamId64}",
-                3600,
-                function () use ($steamId64) {
-                    $apiKey = env('STEAM_API_KEY');
-                    $response = Http::get(
-                        'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/',
-                        [
-                            'key' => $apiKey,
-                            'steamids' => $steamId64,
-                        ]
-                    );
-
-                    return $response->json('response.players.0');
-                }
-            );
-        }
+        $steam = $avatars->profile($authId);
 
         $steamData = [
-            'steamid64' => $steamId64,
-            'avatar' => $steamAvatar['avatarfull'] ?? null,
+            'steamid64' => $steam['steamid64'] ?? $avatars->steamId64($authId),
+            'avatar' => $steam['full'] ?? null,
         ];
 
         // Total time played (sum all time_played across servers)
@@ -137,19 +117,6 @@ class PlayerController extends Controller
         return redirect()
             ->back()
             ->with('status', 'User times deleted and replay files unlinked.');
-    }
-
-    public function convertToSteamID64($authId)
-    {
-        // Parse the STEAM_X:Y:Z parts
-        if (preg_match('/^STEAM_[0-5]:([01]):(\d+)$/', $authId, $matches)) {
-            $Y = $matches[1];
-            $Z = $matches[2];
-
-            return bcadd(bcadd(bcmul($Z, '2'), $Y), '76561197960265728');
-        }
-
-        return null; // Invalid format
     }
 
     public function generatePlayedTimeChartData(

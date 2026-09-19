@@ -199,9 +199,139 @@
         overflow: hidden;
     }
 
-    /* A hairline of accent along the top edge: the "featured" card. */
-    .bracket {
-        box-shadow: inset 0 2px 0 var(--accent);
+    /* The "featured" card: an accent line along the top edge with a slow light
+       travelling across it. */
+    .bracket::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 2;
+        height: 2px;
+        border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+        background-image: linear-gradient(90deg, color-mix(in oklab, var(--accent) 35%, transparent), var(--accent), var(--accent-hover), var(--accent), color-mix(in oklab, var(--accent) 35%, transparent));
+        background-size: 200% 100%;
+        animation: rail-sweep 7s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes rail-sweep {
+        to {
+            background-position: -200% 0;
+        }
+    }
+
+    /* --- effects ----------------------------------------------------------- */
+
+    /* Lifts on hover. */
+    .fx-lift {
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .fx-lift:hover {
+        transform: translateY(-3px);
+        border-color: var(--line-strong);
+        box-shadow: 0 14px 30px rgb(0 0 0 / 0.38), 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent);
+    }
+
+    /* A diagonal sheen that sweeps across on hover. */
+    .fx-shine {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .fx-shine::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        background-image: linear-gradient(115deg, transparent 32%, rgb(255 255 255 / 0.13) 47%, transparent 62%);
+        transform: translateX(-120%);
+        transition: transform 750ms ease;
+        pointer-events: none;
+    }
+
+    .fx-shine:hover::after {
+        transform: translateX(120%);
+    }
+
+    /* The leader of a podium: gold rim, a glow, and a gentle float. */
+    .podium-first {
+        border-color: color-mix(in oklab, var(--gold) 60%, transparent);
+        background-image: radial-gradient(90% 70% at 50% 0%, color-mix(in oklab, var(--gold) 16%, transparent), transparent 70%);
+        box-shadow: 0 0 34px color-mix(in oklab, var(--gold) 16%, transparent);
+        animation: podium-float 4.5s ease-in-out infinite;
+    }
+
+    .podium-first:hover {
+        animation-play-state: paused;
+    }
+
+    .podium-crown {
+        filter: drop-shadow(0 0 8px color-mix(in oklab, var(--gold) 70%, transparent));
+        animation: crown-pulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes podium-float {
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+
+    @keyframes crown-pulse {
+        50% {
+            filter: drop-shadow(0 0 14px color-mix(in oklab, var(--gold) 95%, transparent));
+        }
+    }
+
+    /* The first three rows of the leaderboard, in the same table as everyone else:
+       a coloured edge, a wash of the tier's colour, and a brighter row on hover. */
+    .lb-row td {
+        transition: background-color 150ms ease;
+    }
+
+    /* On the row, not the cells: a gradient per cell restarts in every column and bands. */
+    .lb-row-1 { background-image: linear-gradient(90deg, color-mix(in oklab, var(--gold) 14%, transparent), transparent 60%); }
+    .lb-row-2 { background-image: linear-gradient(90deg, color-mix(in oklab, var(--silver) 11%, transparent), transparent 55%); }
+    .lb-row-3 { background-image: linear-gradient(90deg, color-mix(in oklab, var(--bronze) 12%, transparent), transparent 50%); }
+
+    .lb-row-1 td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+    .lb-row-2 td:first-child { box-shadow: inset 3px 0 0 var(--silver); }
+    .lb-row-3 td:first-child { box-shadow: inset 3px 0 0 var(--bronze); }
+
+    .lb-row-1 td { font-size: 14px; }
+    .lb-row-1 td:nth-child(2) .link { font-weight: 800; }
+
+    .lb-row:hover td {
+        background-color: color-mix(in oklab, var(--accent) 9%, transparent);
+    }
+
+    /* A map's picture eases in on hover. */
+    .cover-photo {
+        transition: transform 600ms ease;
+    }
+
+    .group:hover .cover-photo {
+        transform: scale(1.07);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .bracket::before,
+        .podium-first,
+        .podium-crown {
+            animation: none;
+        }
+
+        .fx-lift,
+        .fx-shine::after,
+        .cover-photo {
+            transition: none;
+        }
+
+        .fx-lift:hover {
+            transform: none;
+        }
     }
 
     .panel-header {
@@ -548,6 +678,13 @@
 
     .data-table th.sortable:hover {
         color: var(--ink);
+    }
+
+    /* For a table that has to earn its width, like the feed beside the summary cards. */
+    .data-table-tight thead th,
+    .data-table-tight tbody td {
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
     }
 
     /* The best value in a column, boxed: the scoreboard idiom. */

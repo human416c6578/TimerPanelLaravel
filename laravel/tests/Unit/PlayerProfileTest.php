@@ -166,3 +166,14 @@ test('versus averages sync only over runs where both players have it', function 
     expect($versus['aSync'])->toBe(90.0)
         ->and($versus['bSync'])->toBe(70.0);
 });
+
+test('the records held are the rank ones, newest first, and capped', function () {
+    $runs = collect(range(1, 9))->map(fn ($n) => insightRun(1, 30, date: sprintf('2026-01-%02d', $n)))
+        ->push(insightRun(4, 30, date: '2026-02-01'));
+
+    $held = (new PlayerProfile)->insights($runs)['held'];
+
+    expect($held)->toHaveCount(6)
+        ->and($held->first()->RecordDate)->toBe('2026-01-09')
+        ->and($held->pluck('Rank')->unique()->all())->toBe([1]);
+});

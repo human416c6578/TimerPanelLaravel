@@ -12,7 +12,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One per request, so the list of stored map pictures is read from disk once.
+        $this->app->singleton(\App\Services\MapImages::class);
     }
 
     /**

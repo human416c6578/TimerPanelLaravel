@@ -27,10 +27,7 @@
                 @forelse ($players as $player)
                     <tr wire:key="player-{{ $player->uuid }}">
                         <td>
-                            <span class="inline-flex items-center gap-2">
-                                <x-flag :code="$player->nationality" />
-                                <a href="{{ route('players.show', $player->uuid) }}" class="link">{{ $player->name }}</a>
-                            </span>
+                            <x-ui.player :name="$player->name" :uuid="$player->uuid" :nationality="$player->nationality" :avatar="$avatars[$player->auth_id] ?? null" />
                         </td>
                         <td class="font-mono text-[11px] text-muted">{{ $player->auth_id }}</td>
                         <td class="hidden font-mono text-[11px] text-subtle md:table-cell">{{ $player->uuid }}</td>

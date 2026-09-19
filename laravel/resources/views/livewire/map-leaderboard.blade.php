@@ -76,7 +76,7 @@
                     $metrics = [
                         ['Time', 'time', 'low', fn ($v) => TimeFormat::runtime($v)],
                         ['Sync', 'sync', 'high', fn ($v) => $stat($v, 1, '%')],
-                        ['Start speed', 'start_speed', 'high', fn ($v) => $stat($v)],
+                        ['Start speed', 'start_speed', 'high', fn ($v) => $v === null ? '—' : number_format((float) $v).' ups'],
                         ['Strafes', 'strafes', 'none', fn ($v) => $stat($v)],
                         ['Jumps', 'jumps', 'none', fn ($v) => $stat($v)],
                         ['Overlaps', 'overlaps', 'low', fn ($v) => $stat($v)],
@@ -159,7 +159,7 @@
                     @if ($view === 'summary')
                         <th class="text-right">Gap</th>
                         <x-ui.sort-th column="sync" :sort="$sort" :direction="$direction" label="Sync" align="right" />
-                        <x-ui.sort-th column="speed" :sort="$sort" :direction="$direction" label="Start" align="right" class="hidden md:table-cell" />
+                        <x-ui.sort-th column="speed" :sort="$sort" :direction="$direction" label="Start (ups)" align="right" class="hidden md:table-cell" />
                         <x-ui.sort-th column="date" :sort="$sort" :direction="$direction" label="Date" class="hidden lg:table-cell" />
                     @else
                         <x-ui.sort-th column="sync" :sort="$sort" :direction="$direction" label="Sync" align="right" />
@@ -188,10 +188,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="inline-flex items-center gap-2">
-                                <x-flag :code="$run->nationality" />
-                                <a href="{{ route('players.show', $run->UserUUID) }}" class="link">{{ $run->UserName }}</a>
-                            </span>
+                            <x-ui.player :name="$run->UserName" :uuid="$run->UserUUID" :nationality="$run->nationality" :avatar="$this->avatars[$run->auth_id] ?? null" />
                         </td>
                         <td class="time time-lg text-right">
                             <a href="{{ route('runs.show', [$mapUuid, $run->CategoryId, $run->UserUUID]) }}" class="hover:text-accent">{{ TimeFormat::runtime($run->time) }}</a>

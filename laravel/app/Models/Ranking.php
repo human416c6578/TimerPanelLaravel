@@ -20,6 +20,7 @@ class Ranking extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_uuid', 'uuid');
+        // The game's own player, not the panel's admin User this used to point at.
+        return $this->belongsTo(GameUser::class, 'user_uuid', 'uuid');
     }
 }

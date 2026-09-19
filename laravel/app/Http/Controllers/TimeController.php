@@ -2,75 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\ServerStatus;
+use App\Services\LatestRuns;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class TimeController extends Controller
 {
-    public function index(Request $request, ServerStatus $serverStatus)
+    public function index(Request $request, LatestRuns $latestRuns)
     {
-        $latestTimes = Cache::remember(
-            'latest_times_24h',
-            now()->addMinutes(2),
-            function () {
-                $subQuery = DB::connection('game_mysql')
-                    ->table('times')
-                    ->select(
-                        'time',
-                        'record_date',
-                        'start_speed',
-                        'user_uuid',
-                        'map_uuid',
-                        'category_id',
-                    )
-                    ->where(
-                        'record_date',
-                        '>',
-                        DB::raw('NOW() - INTERVAL 1 DAY'),
-                    )
-                    ->orderByDesc('record_date')
-                    ->limit(50);
-
-                return DB::connection('game_mysql')
-                    ->query()
-                    ->fromSub($subQuery, 't')
-                    ->select(
-                        't.time',
-                        't.record_date',
-                        't.start_speed',
-                        't.user_uuid',
-                        't.map_uuid',
-                        't.category_id',
-                        'u.name as user_name',
-                        'u.auth_id',
-                        'm.name as map_name',
-                        'c.name as category_name',
-                        'rt.rank',
-                        // The record on that map/category, so the feed can show
-                        // how far off the pace each run was.
-                        'best.time as best_time',
-                    )
-                    ->join('users as u', 'u.uuid', '=', 't.user_uuid')
-                    ->join('maps as m', 'm.uuid', '=', 't.map_uuid')
-                    ->join('categories as c', 'c.id', '=', 't.category_id')
-                    ->join('ranked_times as rt', function ($join) {
-                        $join
-                            ->on('rt.user_uuid', '=', 't.user_uuid')
-                            ->on('rt.map_uuid', '=', 't.map_uuid')
-                            ->on('rt.category_id', '=', 't.category_id');
-                    })
-                    ->leftJoin('ranked_times as best', function ($join) {
-                        $join
-                            ->on('best.map_uuid', '=', 't.map_uuid')
-                            ->on('best.category_id', '=', 't.category_id')
-                            ->where('best.rank', '=', 1);
-                    })
-                    ->orderByDesc('t.record_date')
-                    ->get();
-            },
-        );
+        $latestTimes = $latestRuns->window();
 
         $homeStats = Cache::remember(
             'home_stats',
@@ -110,8 +51,6 @@ class TimeController extends Controller
             },
         );
 
-        $servers = $serverStatus->all();
-
         // Who took the most records in the last 24 hours, from the feed we
         // already have — no further query.
         $recordHolders = collect($latestTimes)
@@ -144,6 +83,6 @@ class TimeController extends Controller
             ->take(5)
             ->values();
 
-        return view('welcome', compact('latestTimes', 'homeStats', 'servers', 'recordHolders', 'spotlight', 'hotMaps', 'closeCalls'));
+        return view('welcome', compact('latestTimes', 'homeStats', 'recordHolders', 'spotlight', 'hotMaps', 'closeCalls'));
     }
 }

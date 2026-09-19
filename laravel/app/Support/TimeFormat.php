@@ -62,4 +62,24 @@ class TimeFormat
 
         return '+'.self::runtime($milliseconds);
     }
+
+    /**
+     * How long ago something happened, as short as it can be: "just now",
+     * "12m ago", "3h ago", "2d ago".
+     */
+    public static function age(int|float|string|null $seconds): string
+    {
+        if ($seconds === null || $seconds === '') {
+            return '—';
+        }
+
+        $seconds = max(0, (int) $seconds);
+
+        return match (true) {
+            $seconds < 60 => 'just now',
+            $seconds < 3600 => intdiv($seconds, 60).'m ago',
+            $seconds < 86400 => intdiv($seconds, 3600).'h ago',
+            default => intdiv($seconds, 86400).'d ago',
+        };
+    }
 }

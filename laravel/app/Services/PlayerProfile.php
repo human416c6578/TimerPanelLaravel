@@ -135,7 +135,7 @@ class PlayerProfile
      *     total: int, records: int, podiums: int, top10: int,
      *     recordShare: float, top10Share: float,
      *     avgSync: float|null, typicalPosition: float|null,
-     *     categories: Collection<int, object>, form: Collection<int, object>
+     *     categories: Collection<int, object>, held: Collection<int, object>, form: Collection<int, object>
      * }
      */
     public function insights(Collection $runs): array
@@ -174,6 +174,13 @@ class PlayerProfile
                     'records' => $group->filter(fn ($run) => (int) $run->Rank === 1)->count(),
                 ])
                 ->sortByDesc('runs')
+                ->take(6)
+                ->values(),
+
+            // The records they hold now, newest first: these are the ones with a replay.
+            'held' => $runs
+                ->filter(fn ($run) => (int) $run->Rank === 1)
+                ->sortByDesc('RecordDate')
                 ->take(6)
                 ->values(),
 

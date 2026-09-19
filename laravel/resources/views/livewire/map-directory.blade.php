@@ -19,7 +19,7 @@
 
             <a wire:key="map-{{ $map->uuid }}"
                href="{{ route('maps.show', $map->uuid) }}"
-               class="group block overflow-hidden rounded-[10px] border border-line transition hover:-translate-y-0.5 hover:border-line-strong">
+               class="group fx-lift fx-shine block overflow-hidden rounded-[10px] border border-line">
                 <x-cover :name="$map->name" class="flex aspect-[16/10] flex-col justify-between p-3">
                     <span class="flex items-center justify-between">
                         <span class="rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/80">
